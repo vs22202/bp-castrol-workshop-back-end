@@ -4,7 +4,7 @@ dotenv.config();
 
 const config = {
     test: {
-        server: process.env.SERVER_NAME,
+        server: process.env.TEST_SERVER_NAME,
         options: {
             port: 1433,
             database: process.env.TEST_DATABASE_NAME
