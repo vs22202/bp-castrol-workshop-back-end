@@ -2,7 +2,6 @@ import express, { Request, Response, NextFunction } from 'express';
 import applicationRoutes from './routes/application';
 import { fileStorage } from './utils/multer';
 import multer from 'multer';
-import { initializeDB } from './db';
 
 const app = express();
 const port = process.env.PORT || 3000;

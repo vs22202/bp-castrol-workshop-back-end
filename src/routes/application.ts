@@ -16,7 +16,7 @@ router.post('/', (req: Request, res: Response) => {
         User_Name: req.body.user_name,
     };
     Application.insert(application).then((application_id) => {
-        res.status(201).json(application_id);
+        res.status(200).json(application_id);
     });
 });
 

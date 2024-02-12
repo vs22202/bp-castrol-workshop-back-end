@@ -12,7 +12,7 @@ const config = {
         authentication: {
             type: "default",
             options: {
-                userName: process.env.USERNAME,
+                userName: process.env.USER_NAME,
                 password: process.env.PASSWORD,
             }
         }
@@ -26,7 +26,7 @@ const config = {
         authentication: {
             type: "default",
             options: {
-                userName: process.env.USERNAME,
+                userName: process.env.USER_NAME,
                 password: process.env.PASSWORD,
             }
         }
