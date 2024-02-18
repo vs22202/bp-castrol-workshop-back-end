@@ -1,25 +1,31 @@
+// Database 
+import { initializeDB } from './db';
+// Functions, variables
 import express, { Request, Response, NextFunction } from 'express';
-import applicationRoutes from './routes/application';
-import { fileStorage } from './utils/multer';
-import multer from 'multer';
+// Routes
+const applicationRoute = require('./routes/application');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(multer({ storage: fileStorage}).array('photos', 12));
-app.use('/application', applicationRoutes);
+// Initialize Database
+initializeDB()
+    .then( (sqlPool) => {
+        app.locals.db = sqlPool;
+    });
+
+//  Routes
+app.use('/application', applicationRoute);
 
 app.get('/', (req: Request, res: Response) => {
-    res.send('Hello Welcome!');
+    res.send('Application started');
 });
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err.stack);
-    res.status(500).send('Something went wrong');
-});
+// Listen on PORT
 if (process.env.TEST != 'true') {
     app.listen(port, () => {
         console.log(`Server running at http://localhost:${port}`);
     });
 }
+
 export default app;

@@ -1,6 +1,8 @@
 import tedious = require('tedious')
 import dotenv = require('dotenv');
 dotenv.config();
+const sql = require('mssql');
+
 
 const config = {
     test: {
@@ -32,6 +34,8 @@ const config = {
         }
     }
 };
+
+/*
 let connection:tedious.Connection|null = null;
 export async function initializeDB(): Promise<tedious.Connection> {
     if (connection == null) {
@@ -53,4 +57,20 @@ export async function initializeDB(): Promise<tedious.Connection> {
         })
     }
     else return connection;
+}
+
+*/
+
+
+
+export async function initializeDB() {
+    try {
+        const appPool = await new sql.ConnectionPool(process.env.TEST == "true" ? config.test : config.development);
+        const pool = await appPool.connect();
+        console.log('Database Connection Established');
+        return pool;
+    } catch(err) {
+        console.log(err);
+        return null;
+    }
 }
