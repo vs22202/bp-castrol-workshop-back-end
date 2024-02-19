@@ -7,36 +7,10 @@ import { fileStorage } from '../utils/multer';
 const router = Router();
 const upload = multer({storage : fileStorage});
 
-//use express-validator for validating fields 
-// Link : https://dev.to/wizdomtek/typescript-express-building-robust-apis-with-nodejs-1fln
-
-/**
- * The application upload module
- */
-
 router.post('/', upload.any(), async (req: Request, res: Response) => {
-    // Application.insert(application).then((application_id) => {
-        //     res.status(200).json(application_id);
-        // });
-        
-    // try {
-    //     const application: Application = new Application(JSON.stringify(req.body));
-    //     const pool = await req.app.locals.db;
-    //     const result = await pool.request()
-    //                             .input('workshop_name',sql.VarChar(50) , application.workshop_name)
-    //                             .input('user_name' , sql.VarChar(50) , application.user_name)
-    //                             .query('INSERT INTO Applications VALUES (@workshop_name,@user_name);');
-
-    //     console.log(result);
-    //     res.status(200).json({msg : 'Record inserted successfully'});
-
-    // } catch(err : any) {
-    //     console.log(err);
-    //     res.status(500).json({msg : err.stack});
-    // }
 
     const application = new Application(req.body, req.files as Express.Multer.File[]);
-
+    // console.log(req.body, req.files);
     try {
         // Create a new request
         const pool : ConnectionPool = req.app.locals.db;
@@ -80,10 +54,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 });
 
 router.get('/', async (req: Request, res: Response) => {
-    // Application.findAll().then((result) => {
-    //     res.json(result);
-    // });
-    
+   
     try {
         // Create request
         const pool : ConnectionPool = req.app.locals.db;

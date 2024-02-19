@@ -1,5 +1,3 @@
-import sql, { ConnectionPool } from 'mssql';
-import app from '..';
 /**
  * The user login details
  */
@@ -7,9 +5,11 @@ import app from '..';
 export class User {
     user_email : string;
     password : string;
+    validated : boolean;
 
     constructor(user_email : string, password : string) {
         this.user_email = user_email;
         this.password = password;
+        this.validated = false;
     }
 }

@@ -35,40 +35,14 @@ const config = {
     }
 };
 
-/*
-let connection:tedious.Connection|null = null;
-export async function initializeDB(): Promise<tedious.Connection> {
-    if (connection == null) {
-        const conn = new tedious.Connection(process.env.TEST == "true" ? config.test : config.development);
-        return new Promise((resolve, reject) => {
-            conn.on("connect", (err: Error): void => {
-                if (err) {
-                    console.log('Error: ', err);
-                    reject(err);
-                    return;
-                }
-                else {
-                    connection = conn;
-                    resolve(conn)
-                }
-                console.log("Database Connection Established");
-            });
-            conn.connect();
-        })
-    }
-    else return connection;
-}
-
-*/
-
-
-
 export async function initializeDB() {
     try {
+        
         const appPool = await new sql.ConnectionPool(process.env.TEST == "true" ? config.test : config.development);
         const pool = await appPool.connect();
         console.log('Database Connection Established');
         return pool;
+
     } catch(err) {
         console.log(err);
         return null;
