@@ -3,34 +3,59 @@ import { fileStorage } from '../utils/multer';
 import multer from 'multer';
 import sql, { ConnectionPool } from 'mssql';
 import { User } from '../models/user';
+import crypto from 'crypto';
 
+// Define requeired variables
 const router = Router();
-const upload = multer({storage : fileStorage});
+const upload = multer({ storage: fileStorage });
 
-router.post('/', upload.any() , async (req: Request, res: Response) => {
-    
-    const user : User = new User(req.body.user_email, req.body.password);
+/**
+ * Router
+ *      POST - To register new user in database
+ */
+
+router.post('/', upload.any(), async (req: Request, res: Response) => {
+    // Create user object
+    const user: User = new User(req.body.user_email, req.body.password);
+    let sqlQuery: string;
 
     try {
         // Create a new request
-        const pool : ConnectionPool = req.app.locals.db;
-        const request = await pool.request();
-        
-        request.input('user_email', sql.NVarChar, user.user_email);
-        request.input('password', sql.NVarChar, user.password);
+        const pool: ConnectionPool = req.app.locals.db;
 
-        const sqlQuery = `
-            INSERT INTO Users (user_email, password) VALUES (@user_email, @password)
-        `;
-        
-        // Execute the query
-        const result = await request.query(sqlQuery);
-        console.log('User registerd successfully:', result.rowsAffected);
-        res.status(201).json({msg : 'User registerd successfully'});
 
-    } catch(error) {
+        // Save user data
+        const insertUserRequest = pool.request()
+            .input('user_email', sql.NVarChar, user.user_email)
+            .input('password', sql.NVarChar, user.password);
+        sqlQuery = `INSERT INTO Users (user_email, password) VALUES (@user_email, @password)`;
+        const result1 = await insertUserRequest.query(sqlQuery);
+        if (result1.rowsAffected[0] !== 1)
+            throw new Error('Error adding user to Users table');
+
+
+        // Add hash string for email verification
+        const hashString = crypto.createHash('md5').update(user.user_email + process.env.HASH_CONSTANT).digest('hex');
+        const addHashRequest = pool.request()
+            .input('hash_key', sql.NVarChar, hashString)
+            .input('user_email', sql.NVarChar, user.user_email);
+        sqlQuery = `INSERT INTO email_verification (hash_key, user_email) VALUES (@hash_key, @user_email)`;
+        const result2 = await addHashRequest.query(sqlQuery);
+        if (result2.rowsAffected[0] !== 1)
+            throw new Error('Error adding user to email verification table');
+
+
+        // Mail clickable link to user for verification
+
+
+
+        // Send response
+        res.status(201).json({ msg: 'User registerd successfully' });
+
+    } catch (error) {
+        // Handle error
         console.log(error);
-        res.status(500).json({msg : 'Error inserting data'});
+        res.status(500).json({ msg: 'Error inserting data' });
     }
 
 });
