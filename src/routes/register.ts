@@ -4,6 +4,8 @@ import multer from 'multer';
 import sql, { ConnectionPool } from 'mssql';
 import { User } from '../models/user';
 import crypto from 'crypto';
+import SENDMAIL from '../utils/mail';
+import { Options } from 'nodemailer/lib/mailer';
 
 // Define requeired variables
 const router = Router();
@@ -46,7 +48,16 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 
 
         // Mail clickable link to user for verification
-
+        const options: Options = {
+            from: process.env.SENDER_EMAIL,
+            to: user.user_email,
+            subject: "Email Verification",
+            text: "This is sample test mail"
+        };
+        SENDMAIL(options, (info: any) => {
+            console.log("Email sent successfully");
+            console.log("MESSAGE ID: ", info.messageId);
+        });
 
 
         // Send response
