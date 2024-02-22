@@ -4,18 +4,25 @@ import sql, { ConnectionPool } from 'mssql';
 import multer from 'multer';
 import { fileStorage } from '../utils/multer';
 
+// Define required variables
 const router = Router();
-const upload = multer({storage : fileStorage});
+const upload = multer({ storage: fileStorage });
+
+/**
+ * Router
+ *      POST  - To upload application data
+ *      GET   - To show current table entries
+ */
 
 router.post('/', upload.any(), async (req: Request, res: Response) => {
-
+    // Create Application object
     const application = new Application(req.body, req.files as Express.Multer.File[]);
-    // console.log(req.body, req.files);
+
     try {
         // Create a new request
-        const pool : ConnectionPool = req.app.locals.db;
+        const pool: ConnectionPool = req.app.locals.db;
         const request = await pool.request();
-        
+
         // Add parameters to the request
         request.input('workshop_name', sql.NVarChar, application.workshop_name);
         request.input('workshop_post_code', sql.NVarChar, application.workshop_post_code);
@@ -33,39 +40,42 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         request.input('consent_being_contacted', sql.Bit, application.consent_being_contacted);
         request.input('consent_receive_info', sql.Bit, application.consent_receive_info);
         request.input('file_paths', sql.NVarChar, JSON.stringify(application.file_paths))
-        
+
         // Prepare the SQL query
         const sqlQuery = `
             INSERT INTO Applications 
             (workshop_name, workshop_post_code, address, state, constructority, user_name, user_email, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths) 
             VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_email, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths)
         `;
-        
+
         // Execute the query
         const result = await request.query(sqlQuery);
         console.log('Application inserted successfully:', result.rowsAffected);
-        res.status(201).json({msg : 'Application inserted successfully'});
-        
+
+        // Send the response
+        res.status(201).json({ msg: 'Application inserted successfully' });
+
     } catch (error) {
+        // Handle error
         console.error('Error inserting application:', error);
-        res.status(500).json({msg : 'Error inserting application'});
+        res.status(500).json({ msg: 'Error inserting application' });
     }
 
 });
 
 router.get('/', async (req: Request, res: Response) => {
-   
     try {
-        // Create request
-        const pool : ConnectionPool = req.app.locals.db;
+        // Create request and execute query
+        const pool: ConnectionPool = req.app.locals.db;
         const result = await pool.request().query('SELECT * FROM Applications');
-        
-        // Send response
-        res.status(200).json({msg : 'Record fetched successfully', result : result});
 
-    } catch(err : any) {
+        // Send the response
+        res.status(200).json({ msg: 'Record fetched successfully', result: result });
+
+    } catch (err: any) {
+        // Handle error
         console.log(err);
-        res.status(500).json({msg : 'Error in fetching data'});
+        res.status(500).json({ msg: 'Error in fetching data' });
     }
 });
 

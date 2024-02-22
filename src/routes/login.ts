@@ -26,10 +26,12 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         // Check if user email is verified
         const verifiedStatusRequest = pool.request()
             .input('user_email', sql.NVarChar, user.user_email);
-        sqlQuery = `SELECT verified FROM Users WHERE user_email=@user_email`;
-        const verifiedStatus: any = await verifiedStatusRequest.query(sqlQuery);
-        if (verifiedStatus === 0)
+        sqlQuery = `SELECT * FROM Users WHERE user_email=@user_email`;
+        const verifiedStatus = await verifiedStatusRequest.query(sqlQuery);
+        if (verifiedStatus.recordset[0].verified === false) {
             res.status(400).json({ msg: 'User not verified' });
+            return;
+        }
 
 
         // Login user
@@ -45,7 +47,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         if (count > 0)
             res.status(200).json({ msg: 'Login Success' });
         else
-            res.status(200).json({ msg: 'Invalid Email/Password' });
+            res.status(400).json({ msg: 'Invalid Email/Password' });
 
     } catch (error) {
         // Handle error

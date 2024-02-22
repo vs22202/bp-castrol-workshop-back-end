@@ -1,15 +1,17 @@
 /**
- * The user login details
+ * User model
  */
 
 export class User {
-    user_email : string;
-    password : string;
-    validated : boolean;
+    // User variables
+    user_email: string;
+    password: string;
+    verified: boolean;
 
-    constructor(user_email : string, password : string) {
+    // Default constructor
+    constructor(user_email: string, password: string) {
         this.user_email = user_email;
         this.password = password;
-        this.validated = false;
+        this.verified = false;
     }
 }
