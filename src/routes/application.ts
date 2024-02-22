@@ -3,6 +3,7 @@ import { Application } from '../models/application';
 import sql, { ConnectionPool } from 'mssql';
 import multer from 'multer';
 import { fileStorage } from '../utils/multer';
+import fse from 'fs-extra';
 
 // Define required variables
 const router = Router();
@@ -21,7 +22,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
     try {
         // Create a new request
         const pool: ConnectionPool = req.app.locals.db;
-        const request = await pool.request();
+        const request = pool.request();
 
         // Add parameters to the request
         request.input('workshop_name', sql.NVarChar, application.workshop_name);
@@ -44,7 +45,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         // Prepare the SQL query
         const sqlQuery = `
             INSERT INTO Applications 
-            (workshop_name, workshop_post_code, address, state, constructority, user_name, user_email, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths) 
+            (workshop_name, workshop_post_code, address, state, city, user_name, user_email, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths) 
             VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_email, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths)
         `;
 
@@ -56,8 +57,16 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         res.status(201).json({ msg: 'Application inserted successfully' });
 
     } catch (error) {
+        // Delete uploaded files
+        application.file_paths.forEach((path : string) => {
+            fse.remove(path, (err) => {
+                if(err)
+                    console.log("Could not delete file at path : ", path);
+            });
+        });
+
         // Handle error
-        console.error('Error inserting application:', error);
+        console.log('Error inserting application:', error);
         res.status(500).json({ msg: 'Error inserting application' });
     }
 
