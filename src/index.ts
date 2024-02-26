@@ -15,7 +15,7 @@ initializeDB()
 app.use('/application', require('./routes/application'));
 app.use('/register', require('./routes/register'));
 app.use('/login', require('./routes/login'));
-app.use('/emailVerification', require('./routes/emailVerification'));
+app.use('/generateOtp', require('./routes/generateOtp'));
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Application started');

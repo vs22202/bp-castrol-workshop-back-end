@@ -29,7 +29,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         sqlQuery = `SELECT * FROM Users WHERE user_email=@user_email`;
         const verifiedStatus = await verifiedStatusRequest.query(sqlQuery);
         if (verifiedStatus.recordset[0].verified === false) {
-            res.status(400).json({ msg: 'User not verified' });
+            res.status(400).json({ output: 'fail', msg: 'User not verified' });
             return;
         }
 
@@ -39,20 +39,20 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
             .input('user_email', sql.NVarChar, user.user_email)
             .input('password', sql.NVarChar, user.password);
         sqlQuery = `SELECT COUNT(*) AS count FROM Users WHERE user_email = @user_email AND password = @password`;
-        const result = await loginRequest.query(sqlQuery);
-        const count = result.recordset[0].count;
+        const loginResult = await loginRequest.query(sqlQuery);
+        const count = loginResult.recordset[0].count;
 
 
         // Send response
         if (count > 0)
-            res.status(200).json({ msg: 'Login Success' });
+            res.status(200).json({ output: 'success', msg: 'Login Success' });
         else
-            res.status(400).json({ msg: 'Invalid Email/Password' });
+            res.status(400).json({ output: 'fail', msg: 'Invalid Email/Password' });
 
     } catch (error) {
         // Handle error
         console.error(error);
-        res.status(500).json({ msg: 'Server side error' });
+        res.status(500).json({ output: 'fail', msg: 'Server side error' });
     }
 
 });
