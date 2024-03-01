@@ -1,3 +1,6 @@
+import path from "path"
+import { uploadFile } from "../utils/firebase"
+import { getDownloadURL } from "firebase/storage"
 /**
  * Application model
  */
@@ -25,7 +28,7 @@ export class Application {
     last_modified_date: string
 
     // Default constructor
-    constructor(data: any, files?: Express.Multer.File[]) {
+    constructor(data: any) {
         this.workshop_name = data.workshop_name;
         this.workshop_post_code = data.workshop_post_code;
         this.address = data.address;
@@ -45,12 +48,23 @@ export class Application {
         this.last_modified_date = (new Date()).toISOString();
 
         this.file_paths = [];
-        // Store relative paths for each file from files
+
+    }
+
+    uploadFiles = async (files?: Express.Multer.File[]): Promise<void> => {
+        // Uploading files to cloud asynchronously and saving url in file_paths
+        let p: Promise<string>[] = []
         if (files && Array.isArray(files)) {
-            files.forEach((file: Express.Multer.File) => {
-                this.file_paths.push(file.path);
+            files.forEach(async (file: Express.Multer.File) => {
+                p.push(uploadFile(file))
             });
         }
+        return new Promise((resolve) => {
+            Promise.all(p).then((values) => {
+                this.file_paths = values;
+                resolve()
+            })
+        })
     }
 
 }
