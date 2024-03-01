@@ -4,7 +4,7 @@ import SENDMAIL from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
 
 // Define requeired variables
-const router = Router();
+const router: Router = Router();
 
 /**
  * Router
@@ -13,7 +13,7 @@ const router = Router();
  * Otp_Verification table
  *      user_email (@primary)   - string
  *      otp                     - string
- *      generate_time           - biginteger
+ *      generate_time           - datetime2
  */
 
 router.post('/', async (req: Request, res: Response) => {
@@ -28,7 +28,9 @@ router.post('/', async (req: Request, res: Response) => {
         // Check if user is verified
         const verifiedStatusRequest = pool.request()
             .input('user_email', sql.NVarChar, user_email);
-        sqlQuery = `SELECT * FROM Users WHERE user_email=@user_email`;
+        sqlQuery = `SELECT * 
+                    FROM Users 
+                    WHERE user_email=@user_email`;
         const verifiedStatus = await verifiedStatusRequest.query(sqlQuery);
         if (verifiedStatus.recordset[0].verified === true) {
             res.status(400).json({ output: 'fail', msg: 'User already verified' });
@@ -42,7 +44,9 @@ router.post('/', async (req: Request, res: Response) => {
         // Check OTP table
         const checkOtpExistRequest = pool.request()
             .input('user_email', sql.NVarChar, user_email);
-        sqlQuery = `SELECT COUNT(*) AS count FROM Email_Verification WHERE user_email=@user_email`;
+        sqlQuery = `SELECT COUNT(*) AS count 
+                    FROM Otp_Verification 
+                    WHERE user_email=@user_email`;
         const checkOtpExistsResult = await checkOtpExistRequest.query(sqlQuery);
 
         if (checkOtpExistsResult.recordset[0].count > 0) {
@@ -50,8 +54,10 @@ router.post('/', async (req: Request, res: Response) => {
             const updateOtpRequest = pool.request()
                 .input('otp', sql.NVarChar, otp)
                 .input('user_email', sql.NVarChar, user_email)
-                .input('generate_time', sql.BigInt, Date.now());
-            sqlQuery = `UPDATE Email_Verification SET otp=@otp, generate_time=@generate_time WHERE user_email=@user_email`;
+                .input('generate_time', sql.DateTime2, (new Date()).toISOString());
+            sqlQuery = `UPDATE Otp_Verification 
+                        SET otp=@otp, generate_time=@generate_time 
+                        WHERE user_email=@user_email`;
             const updateOtpResult = await updateOtpRequest.query(sqlQuery);
             if (updateOtpResult.rowsAffected[0] !== 1)
                 throw new Error('Error updating OTP');
@@ -61,8 +67,9 @@ router.post('/', async (req: Request, res: Response) => {
             const addOtpRequest = pool.request()
                 .input('otp', sql.NVarChar, otp)
                 .input('user_email', sql.NVarChar, user_email)
-                .input('generate_time', sql.BigInt, Date.now());
-            sqlQuery = `INSERT INTO Email_Verification (user_email, otp, generate_time) VALUES (@user_email, @otp , @generate_time)`;
+                .input('generate_time', sql.DateTime2, (new Date()).toISOString());
+            sqlQuery = `INSERT INTO Otp_Verification (user_email, otp, generate_time) 
+                        VALUES (@user_email, @otp , @generate_time)`;
             const addOtpResult = await addOtpRequest.query(sqlQuery);
             if (addOtpResult.rowsAffected[0] !== 1)
                 throw new Error('Error inserting OTP');
@@ -93,4 +100,4 @@ router.post('/', async (req: Request, res: Response) => {
 
 });
 
-module.exports = router;
+export default router;

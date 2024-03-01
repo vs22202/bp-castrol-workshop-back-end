@@ -1,10 +1,10 @@
-import tedious = require('tedious');
 import dotenv = require('dotenv');
 dotenv.config();
 const sql = require('mssql');
 
 // Database configurations
 const config = {
+    // Test server 
     test: {
         server: process.env.TEST_SERVER_NAME,
         options: {
@@ -19,6 +19,7 @@ const config = {
             }
         }
     },
+    // Development server 
     development: {
         server: process.env.SERVER_NAME,
         options: {

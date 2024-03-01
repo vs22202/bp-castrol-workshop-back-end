@@ -21,6 +21,8 @@ export class Application {
     consent_being_contacted: boolean
     consent_receive_info: boolean
     file_paths: string[]
+    application_status: string
+    last_modified_date: string
 
     // Default constructor
     constructor(data: any, files?: Express.Multer.File[]) {
@@ -39,6 +41,8 @@ export class Application {
         this.consent_process_data = data.consent_process_data;
         this.consent_being_contacted = data.consent_being_contacted;
         this.consent_receive_info = data.consent_receive_info;
+        this.application_status = ApplicationStatus.Pending;
+        this.last_modified_date = (new Date()).toISOString();
 
         this.file_paths = [];
         // Store relative paths for each file from files
@@ -49,4 +53,13 @@ export class Application {
         }
     }
 
+}
+
+// Application Status Enum
+export enum ApplicationStatus {
+    Pending = 'Pending',
+    InReview = 'InReview',
+    Processing = 'Processing',
+    Approved = 'Approved',
+    Rejected = 'Rejected'
 }

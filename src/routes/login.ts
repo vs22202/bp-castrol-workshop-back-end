@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { fileStorage } from '../utils/multer';
-import multer from 'multer';
+import multer, { Multer } from 'multer';
 import sql, { ConnectionPool } from 'mssql';
 import { User } from '../models/user';
 
 // Define required variables
-const router = Router();
-const upload = multer({ storage: fileStorage });
+const router: Router = Router();
+const upload: Multer = multer({ storage: fileStorage });
 
 /**
  * Router
@@ -26,7 +26,9 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         // Check if user email is verified
         const verifiedStatusRequest = pool.request()
             .input('user_email', sql.NVarChar, user.user_email);
-        sqlQuery = `SELECT * FROM Users WHERE user_email=@user_email`;
+        sqlQuery = `SELECT * 
+                    FROM Users 
+                    WHERE user_email=@user_email`;
         const verifiedStatus = await verifiedStatusRequest.query(sqlQuery);
         if (verifiedStatus.recordset[0].verified === false) {
             res.status(400).json({ output: 'fail', msg: 'User not verified' });
@@ -38,7 +40,9 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         const loginRequest = pool.request()
             .input('user_email', sql.NVarChar, user.user_email)
             .input('password', sql.NVarChar, user.password);
-        sqlQuery = `SELECT COUNT(*) AS count FROM Users WHERE user_email = @user_email AND password = @password`;
+        sqlQuery = `SELECT COUNT(*) AS count 
+                    FROM Users 
+                    WHERE user_email = @user_email AND password = @password`;
         const loginResult = await loginRequest.query(sqlQuery);
         const count = loginResult.recordset[0].count;
 
@@ -57,4 +61,4 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 
 });
 
-module.exports = router;
+export default router;
