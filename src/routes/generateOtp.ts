@@ -4,6 +4,7 @@ import sql, { ConnectionPool } from 'mssql';
 import multer, { Multer } from 'multer';
 import SENDMAIL from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
+import generateOTP from '../utils/generateOtp';
 
 // Define requeired variables
 const router: Router = Router();
@@ -41,7 +42,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 
 
         // Generate OTP
-        const otp: number = 100000 + Math.random() * 900000;
+        const otp: string = generateOTP()
         // Check OTP table
         const checkOtpExistRequest = pool.request()
             .input('user_email', sql.NVarChar, user_email);
