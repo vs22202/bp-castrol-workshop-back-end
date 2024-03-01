@@ -1,14 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { fileStorage } from '../utils/multer';
 import sql, { ConnectionPool } from 'mssql';
-import multer from 'multer';
+import multer, { Multer } from 'multer';
 import SENDMAIL from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
-import generateOTP from '../utils/generateOtp';
 
 // Define requeired variables
-const router = Router();
-const upload = multer({ storage: fileStorage });
+const router: Router = Router();
+const upload: Multer = multer({ storage: fileStorage });
 /**
  * Router
  *      POST - generate OTP and store in table
@@ -19,7 +18,7 @@ const upload = multer({ storage: fileStorage });
  *      generate_time           - datetime2
  */
 
-router.post('/',upload.any(), async (req: Request, res: Response) => {
+router.post('/', upload.any(), async (req: Request, res: Response) => {
     const user_email = req.body.user_email;
     let sqlQuery: string;
 
@@ -42,8 +41,7 @@ router.post('/',upload.any(), async (req: Request, res: Response) => {
 
 
         // Generate OTP
-        //const otp: number = 100000 + Math.random() * 900000;
-        const otp: string = generateOTP();
+        const otp: number = 100000 + Math.random() * 900000;
         // Check OTP table
         const checkOtpExistRequest = pool.request()
             .input('user_email', sql.NVarChar, user_email);
@@ -57,8 +55,10 @@ router.post('/',upload.any(), async (req: Request, res: Response) => {
             const updateOtpRequest = pool.request()
                 .input('otp', sql.NVarChar, otp)
                 .input('user_email', sql.NVarChar, user_email)
-                .input('generate_time', sql.DateTime,  new Date());
-            sqlQuery = `UPDATE Email_Verification SET otp=@otp, generate_time=@generate_time WHERE user_email=@user_email`;
+                .input('generate_time', sql.DateTime, new Date());
+            sqlQuery = `UPDATE Otp_Verification 
+                        SET otp=@otp, generate_time=@generate_time 
+                        WHERE user_email=@user_email`;
             const updateOtpResult = await updateOtpRequest.query(sqlQuery);
             if (updateOtpResult.rowsAffected[0] !== 1)
                 throw new Error('Error updating OTP');
@@ -66,10 +66,11 @@ router.post('/',upload.any(), async (req: Request, res: Response) => {
         else {
             // Insert OTP to table
             const addOtpRequest = pool.request()
-                .input('otp', sql.NVarChar,otp)
+                .input('otp', sql.NVarChar, otp)
                 .input('user_email', sql.NVarChar, user_email)
                 .input('generate_time', sql.DateTime, new Date());
-            sqlQuery = `INSERT INTO Email_Verification (user_email, otp, generate_time) VALUES (@user_email, @otp , @generate_time)`;
+            sqlQuery = `INSERT INTO Otp_Verification (user_email, otp, generate_time) 
+                        VALUES (@user_email, @otp , @generate_time)`;
             const addOtpResult = await addOtpRequest.query(sqlQuery);
             if (addOtpResult.rowsAffected[0] !== 1)
                 throw new Error('Error inserting OTP');

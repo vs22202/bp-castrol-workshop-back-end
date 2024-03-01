@@ -38,23 +38,17 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         const loginRequest = pool.request()
             .input('user_email', sql.NVarChar, user.user_email)
             .input('password', sql.NVarChar, user.password);
-        sqlQuery = `SELECT user_id,user_email FROM Users WHERE user_email = @user_email AND password = @password`;
-        loginRequest.query(sqlQuery).then((result) => {
-            if (result.recordset.length == 0) {
-                res.status(400).json({ output: 'fail', msg: 'Invalid Email/Password' });
-                return;
-            }
-            res.status(200).json({ output: 'success', msg: 'Login Success', user:result.recordset[0]});
+        sqlQuery = `SELECT user_id,user_email 
+                    FROM Users 
+                    WHERE user_email = @user_email AND password = @password`;
+        loginRequest.query(sqlQuery)
+            .then((result) => {
+                if (result.recordset.length == 0)
+                    res.status(400).json({ output: 'fail', msg: 'Invalid Email/Password' });
+                else
+                    res.status(200).json({ output: 'success', msg: 'Login Success', user: result.recordset[0] });
+            })
 
-        })
-        
-
-        // console.log(loginResult.recordset[0])
-        // // Send response
-        // if (count > 0)
-        //     res.status(200).json({ output: 'success', msg: 'Login Success', });
-        // else
-        //     res.status(400).json({ output: 'fail', msg: 'Invalid Email/Password' });
 
     } catch (error) {
         // Handle error
