@@ -28,9 +28,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         // Retrive OTP from Otp_Verification table
         const retriveOtpRequest = pool.request()
             .input('user_email', sql.NVarChar, user.user_email);
-        sqlQuery = `SELECT otp,generate_time 
-                    FROM Otp_Verification 
-                    WHERE user_email=@user_email`;
+        sqlQuery = `SELECT otp,generate_time FROM Email_Verification WHERE user_email=@user_email`;
         const retriveOtpResult = await retriveOtpRequest.query(sqlQuery);
 
 
@@ -53,8 +51,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         // Update Otp_Verification table
         const deleteOtpRequest = pool.request()
             .input('user_email', sql.NVarChar, user.user_email);
-        sqlQuery = `DELETE FROM Otp_Verification 
-                    WHERE user_email=@user_email`;
+        sqlQuery = `DELETE FROM Email_Verification WHERE user_email=@user_email`;
         const deleteOtpResult = await deleteOtpRequest.query(sqlQuery);
         if (deleteOtpResult.rowsAffected[0] !== 1)
             throw new Error('Could not delete from Otp_Verification table');
@@ -73,7 +70,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 
 
         // Send response
-        res.status(201).json({ output: 'success', msg: 'User registerd successfully' });
+        res.status(201).json({ output: 'success', msg: 'User registered successfully' });
 
     } catch (error) {
         // Handle error
