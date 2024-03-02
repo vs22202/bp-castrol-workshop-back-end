@@ -79,6 +79,7 @@ router.get('/', async (req: Request, res: Response) => {
     try {
         // Create request and execute query
         const pool: ConnectionPool = req.app.locals.db;
+        
         const result = await pool.request().query('SELECT * FROM Applications');
 
         // Send the response
@@ -90,5 +91,28 @@ router.get('/', async (req: Request, res: Response) => {
         res.status(500).json({ output: 'fail', msg: 'Error in fetching data' });
     }
 });
+
+router.get('/:user_email', async (req: Request, res: Response) =>{
+    const user_email = req.params.user_email;
+    try {
+        // Create request and execute query
+        const pool: ConnectionPool = req.app.locals.db;
+        const request: sql.Request = pool.request()
+        request.input('user_email',sql.NVarChar,user_email);
+        const sqlQuery = 'SELECT * FROM Applications WHERE user_email=@user_email'
+        const result = await request.query(sqlQuery);
+        if (result.recordset.length == 0) {
+            res.status(200).json({ output: 'no records', msg: 'No application found', result: result });
+            return;
+        }
+        // Send the response
+        res.status(200).json({ output: 'success', msg: 'Record fetched successfully', result: result.recordset[0] });
+
+    } catch (err: any) {
+        // Handle error
+        console.log(err);
+        res.status(500).json({ output: 'fail', msg: 'Error in fetching data' });
+    }
+})
 
 export default router;
