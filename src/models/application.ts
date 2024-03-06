@@ -1,6 +1,7 @@
 import path from "path"
 import { uploadFile } from "../utils/firebase"
 import { getDownloadURL } from "firebase/storage"
+import sql from 'mssql';
 /**
  * Application model
  */
@@ -76,4 +77,86 @@ export enum ApplicationStatus {
     Processing = 'Processing',
     Approved = 'Approved',
     Rejected = 'Rejected'
+}
+
+export class UpdateApplication {
+    application_id?: number
+    workshop_name?: string
+    workshop_post_code?: string
+    address?: string
+    state?: string
+    city?: string
+    user_name?: string
+    user_email?: string
+    user_mobile?: number
+    bay_count?: number
+    services_offered?: string
+    expertise?: string
+    brands?: string
+    consent_process_data?: boolean
+    consent_being_contacted?: boolean
+    consent_receive_info?: boolean
+    file_paths?: string[]
+    application_status?: string
+    last_modified_date?: string
+    filesOld?: string[]
+    constructor(data: any) {
+        if (data.filesOld && data.filesOld != "undefined") {
+            const old_files: { filename: string, type: string, fileurl: string }[] = JSON.parse(data.filesOld)
+            data.filesOld = []
+            old_files.forEach((file) => {
+                data.filesOld.push(file.fileurl)
+            })
+        }
+        Object.assign(this, data)
+        this.last_modified_date = (new Date()).toISOString();
+    }
+    uploadFiles = async (files?: Express.Multer.File[]): Promise<void> => {
+        // Uploading files to cloud asynchronously and saving url in file_paths
+        let p: Promise<string>[] = []
+        if (files && Array.isArray(files)) {
+            files.forEach(async (file: Express.Multer.File) => {
+                p.push(uploadFile(file))
+            });
+        }
+        return new Promise((resolve) => {
+            Promise.all(p).then((values) => {
+                this.file_paths = values;
+                resolve()
+            })
+        })
+    }
+    setSQLInput(request: sql.Request,field: keyof UpdateApplication,value:any) {
+        switch (field) {
+            case "workshop_name":
+            case "workshop_post_code":
+            case "address":
+            case "state":
+            case "city":
+            case "user_name":
+            case "user_email":
+            case "user_mobile":
+            case "services_offered":
+            case "expertise":
+            case "brands":
+            case "file_paths":
+            case "application_status":
+            case "city":
+                request.input(`${field}`, sql.NVarChar, value);
+                return;
+            case "consent_being_contacted":
+            case "consent_process_data":
+            case "consent_receive_info":
+                request.input(`${field}`, sql.Bit, value);
+                return;
+            case "bay_count":
+                request.input(`${field}`, sql.Int, value);
+                return;
+            case "last_modified_date":
+                request.input(`${field}`, sql.DateTime2, value);
+                return;
+            default:
+                return undefined
+        }
+    }
 }

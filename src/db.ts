@@ -20,7 +20,7 @@ const config = {
         }
     },
     // Development server 
-    development: {
+    production: {
         server: process.env.SERVER_NAME,
         options: {
             port: 1433,
@@ -33,6 +33,21 @@ const config = {
                 password: process.env.PASSWORD,
             }
         }
+    },
+    development: {
+        server: 'localhost',
+        options: {
+            port: 1433,
+            database: 'bp_capstone_project',
+            trustServerCertificate: true
+        },
+        authentication: {
+            type: "default",
+            options: {
+                userName: 'sa',
+                password: 'CorrectHorseBatteryStapleFor$',
+            },
+        }
     }
 };
 
@@ -40,7 +55,7 @@ const config = {
 export async function initializeDB() {
     try {
         // Connect to SQL Connection Pool
-        const sqlPool = await new sql.ConnectionPool(process.env.TEST == "true" ? config.test : config.development);
+        const sqlPool = await new sql.ConnectionPool(process.env.MODE == "test" ? config.test : process.env.MODE == "dev" ? config.development : config.production);
         const pool = await sqlPool.connect();
 
         console.log('Database Connection Established');

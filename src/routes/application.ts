@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { Application } from '../models/application';
+import { Application, UpdateApplication } from '../models/application';
 import sql, { ConnectionPool } from 'mssql';
 import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
@@ -76,10 +76,11 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 });
 
 router.get('/', async (req: Request, res: Response) => {
+
     try {
         // Create request and execute query
         const pool: ConnectionPool = req.app.locals.db;
-        
+
         const result = await pool.request().query('SELECT * FROM Applications');
 
         // Send the response
@@ -91,14 +92,45 @@ router.get('/', async (req: Request, res: Response) => {
         res.status(500).json({ output: 'fail', msg: 'Error in fetching data' });
     }
 });
-
-router.get('/:user_email', async (req: Request, res: Response) =>{
+router.post("/edit", upload.any(), async (req: Request, res: Response) => {
+    const application: UpdateApplication = new UpdateApplication(req.body);
+    application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
+        try {
+            const pool: ConnectionPool = req.app.locals.db;
+            const request: sql.Request = pool.request();
+            if (application.filesOld) {
+                application.file_paths = application.file_paths?.concat(application.filesOld)
+            }
+            let field: keyof UpdateApplication;
+            let setUpdates = 'SET '
+            for (field in application) {
+                if (field == "filesOld" || field == "uploadFiles") continue;
+                if (field != "user_email") setUpdates += `${field} = @${field}, `
+                if (field == 'file_paths') {
+                    application.setSQLInput(request, field, JSON.stringify(application[field]))
+                    continue;
+                }
+                application.setSQLInput(request, field, application[field])
+            }
+            setUpdates = setUpdates.slice(0, -2);
+            const sqlQuery = `UPDATE Applications ${setUpdates} WHERE user_email = @user_email`
+            const result = await request.query(sqlQuery);
+            console.log('Application updated successfully:', result.rowsAffected);
+            res.status(200).json({ output: 'success', msg: 'application updated successfully' });
+        }
+        catch (error) {
+            console.log('Error inserting application:', error);
+            res.status(500).json({ output: 'fail', msg: 'Error inserting application' });
+        }
+    })
+})
+router.get('/:user_email', async (req: Request, res: Response) => {
     const user_email = req.params.user_email;
     try {
         // Create request and execute query
         const pool: ConnectionPool = req.app.locals.db;
         const request: sql.Request = pool.request()
-        request.input('user_email',sql.NVarChar,user_email);
+        request.input('user_email', sql.NVarChar, user_email);
         const sqlQuery = 'SELECT * FROM Applications WHERE user_email=@user_email'
         const result = await request.query(sqlQuery);
         if (result.recordset.length == 0) {
