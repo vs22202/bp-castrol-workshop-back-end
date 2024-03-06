@@ -24,7 +24,7 @@ app.get('/', (req: Request, res: Response) => {
 
 
 // Listen on PORT
-if (process.env.TEST != 'true') {
+if (process.env.MODE != 'test') {
     app.listen(port, () => {
         console.log(`Server running at http://localhost:${port}`);
     });
