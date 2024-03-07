@@ -6,17 +6,18 @@ const sql = require('mssql');
 const config = {
     // Test server 
     test: {
-        server: process.env.TEST_SERVER_NAME,
+        server: 'localhost',
         options: {
             port: 1433,
-            database: process.env.TEST_DATABASE_NAME
+            database: 'bp_capstone_project',
+            trustServerCertificate: true
         },
         authentication: {
             type: "default",
             options: {
-                userName: process.env.USER_NAME,
-                password: process.env.PASSWORD,
-            }
+                userName: 'sa',
+                password: 'CorrectHorseBatteryStapleFor$',
+            },
         }
     },
     // Development server 
