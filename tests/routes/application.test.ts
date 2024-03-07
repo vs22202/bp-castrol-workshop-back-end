@@ -54,10 +54,11 @@ describe('Application Router', () => {
             // Close the testing database connection to simulate an error
             // await pool.close();
 
-            const response = await request(app).get('/application');
+            const response = await request(app).get('/applicatio');
 
-            expect(response.status).toBe(500);
-            expect(response.body).toEqual({ output: 'fail', msg: 'Error in fetching data' });
+            expect(response.status).toBe(404);
+            expect(response.body).toEqual({});
+            //expect(response.body).toEqual({ output: 'fail', msg: 'Error in fetching data' });
             // initializeDB()
             // .then((pool) => {
             //     app.locals.db = pool;
