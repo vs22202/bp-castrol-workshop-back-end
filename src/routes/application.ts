@@ -4,7 +4,7 @@ import sql, { ConnectionPool } from 'mssql';
 import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
 import fse from 'fs-extra';
-
+import authenticateJWT from '../utils/authenticate'
 // Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
@@ -15,7 +15,7 @@ const upload: Multer = multer({ storage: fileStorage });
  *      GET   - To show current table entries
  */
 
-router.post('/', upload.any(), async (req: Request, res: Response) => {
+router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Response) => {
     // Create Application object
     const application: Application = new Application(req.body);
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
@@ -75,7 +75,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 
 });
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', authenticateJWT, async (req: Request, res: Response) => {
 
     try {
         // Create request and execute query
@@ -92,7 +92,7 @@ router.get('/', async (req: Request, res: Response) => {
         res.status(500).json({ output: 'fail', msg: 'Error in fetching data' });
     }
 });
-router.post("/edit", upload.any(), async (req: Request, res: Response) => {
+router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: Response) => {
     const application: UpdateApplication = new UpdateApplication(req.body);
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
         try {
@@ -124,7 +124,7 @@ router.post("/edit", upload.any(), async (req: Request, res: Response) => {
         }
     })
 })
-router.get('/:user_email', async (req: Request, res: Response) => {
+router.get('/:user_email', authenticateJWT, async (req: Request, res: Response) => {
     const user_email = req.params.user_email;
     try {
         // Create request and execute query

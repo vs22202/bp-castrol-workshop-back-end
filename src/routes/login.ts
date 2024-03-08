@@ -3,6 +3,10 @@ import { fileStorage } from '../utils/multer';
 import multer, { Multer } from 'multer';
 import sql, { ConnectionPool } from 'mssql';
 import { User } from '../models/user';
+import jwt from 'jsonwebtoken';
+import dotenv = require('dotenv');
+import { authenticateJWTLogin } from '../utils/authenticate';
+dotenv.config();
 
 // Define required variables
 const router: Router = Router();
@@ -13,7 +17,7 @@ const upload: Multer = multer({ storage: fileStorage });
  *      POST - To validate user login details from database
  */
 
-router.post('/', upload.any(), async (req: Request, res: Response) => {
+router.post('/', [authenticateJWTLogin,upload.any()], async (req: Request, res: Response) => {
     // Create user object
     const user: User = new User(req.body.user_email, req.body.password);
     let sqlQuery: string;
@@ -45,8 +49,12 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
             .then((result) => {
                 if (result.recordset.length == 0)
                     res.status(400).json({ output: 'fail', msg: 'Invalid Email/Password' });
-                else
-                    res.status(200).json({ output: 'success', msg: 'Login Success', user: result.recordset[0] });
+                else{
+                    //const defaultaccesstoken = '1e2r3t4y5y6u7i8o9p'
+                    const accessToken = jwt.sign({userId: result.recordset[0].user_id}, process.env.ACCESS_TOKEN_SECRET || 'access');
+                    res.status(200).json({ output: 'success', msg: 'Login Success', user: result.recordset[0], accessToken: accessToken});
+                }
+                    
             })
 
 
