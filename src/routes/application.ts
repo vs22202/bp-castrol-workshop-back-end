@@ -5,6 +5,8 @@ import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
 import fse from 'fs-extra';
 import { CustomRequest, authenticateJWT } from '../utils/authenticate'
+import SENDMAIL, { generateHTML } from '../utils/mail';
+import { Options } from 'nodemailer/lib/mailer';
 // Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
@@ -56,7 +58,31 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
             // Execute the query
             const result = await request.query(sqlQuery);
             console.log('Application inserted successfully:', result.rowsAffected);
-
+            //Send New Application Added Alert
+            const options: Options = {
+                from: process.env.SENDER_EMAIL,
+                to: process.env.CASTROL_ADMIN_EMAIL,
+                subject: "New Certificate Application Submitted",
+                text: `A new workshop has submitted an application. The workshop name is ${application.workshop_name}.`,
+                html: `<html>
+                <div style="padding-block: 32px;padding-inline: 72px;text-transform: capitalize;">
+                  <h2 style="margin: 0;padding: 0;font-size: 40;font-weight: bold;color: rgba(0, 153, 0, 1);">
+                    A New Application For Certification Has Been Submitted By A Workshop
+                  </h2>
+                  <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">The Submitted Data is attached below.</h3>
+                </div>
+            </html>`,
+                attachments: [
+                    {
+                        filename: 'WorkshopData.html',
+                        content:generateHTML(application)
+                    }
+                ]
+            };
+            SENDMAIL(options, (info: any) => {
+                console.log("Application Created Email sent successfully");
+                console.log("MESSAGE ID: ", info.messageId);
+            });
             // Send the response
             res.status(201).json({ output: 'success', msg: 'Application inserted successfully' });
 

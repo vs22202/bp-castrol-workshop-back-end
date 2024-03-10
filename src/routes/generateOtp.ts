@@ -86,7 +86,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
             text: `Your OTP for email verification is ${otp}.\nDo not share the OTP with anyone.\n`
         };
         SENDMAIL(options, (info: any) => {
-            console.log("Email sent successfully");
+            console.log("OTP Generated Email sent successfully");
             console.log("MESSAGE ID: ", info.messageId);
         });
 
