@@ -17,7 +17,7 @@ const upload: Multer = multer({ storage: fileStorage });
  *      POST - To validate user login details from database
  */
 
-router.post('/', [authenticateJWTLogin,upload.any()], async (req: Request, res: Response) => {
+router.post('/', [upload.any(),authenticateJWTLogin], async (req: Request, res: Response) => {
     // Create user object
     const user: User = new User(req.body.user_email, req.body.password);
     let sqlQuery: string;
@@ -52,7 +52,7 @@ router.post('/', [authenticateJWTLogin,upload.any()], async (req: Request, res: 
                 else{
                     //const defaultaccesstoken = '1e2r3t4y5y6u7i8o9p'
                     const accessToken = jwt.sign({userId: result.recordset[0].user_id}, process.env.ACCESS_TOKEN_SECRET || 'access');
-                    res.status(200).json({ output: 'success', msg: 'Login Success', user: result.recordset[0], accessToken: accessToken});
+                    res.status(200).json({ output: 'success', msg: 'Login Success', user: result.recordset[0], auth_token: accessToken});
                 }
                     
             })

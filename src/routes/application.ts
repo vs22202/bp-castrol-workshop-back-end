@@ -4,7 +4,7 @@ import sql, { ConnectionPool } from 'mssql';
 import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
 import fse from 'fs-extra';
-import authenticateJWT from '../utils/authenticate'
+import { CustomRequest, authenticateJWT } from '../utils/authenticate'
 // Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
@@ -18,6 +18,7 @@ const upload: Multer = multer({ storage: fileStorage });
 router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Response) => {
     // Create Application object
     const application: Application = new Application(req.body);
+    const user_id = parseInt((req as CustomRequest).token.userId)
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
 
         try {
@@ -39,16 +40,17 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
             request.input('brands', sql.NVarChar, application.brands);
             request.input('consent_process_data', sql.Bit, application.consent_process_data);
             request.input('consent_being_contacted', sql.Bit, application.consent_being_contacted);
-            request.input('consent_receive_info', sql.Bit, application.consent_receive_info);
+            request.input('consent_receive_info', sql.Bit, application.consent_receive_info == true);
             request.input('file_paths', sql.NVarChar, JSON.stringify(application.file_paths));
             request.input('application_status', sql.NVarChar, application.application_status);
             request.input('last_modified_date', sql.DateTime2, application.last_modified_date);
+            request.input('user_id', sql.Int, user_id);
 
             // Prepare the SQL query
             const sqlQuery = `
                 INSERT INTO Applications 
-                (workshop_name, workshop_post_code, address, state, city, user_name, user_email, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths, application_status, last_modified_date) 
-                VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_email, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths, @application_status, @last_modified_date)
+                (workshop_name, workshop_post_code, address, state, city, user_name, user_email, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths, application_status, last_modified_date,user_id) 
+                VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_email, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths, @application_status, @last_modified_date,@user_id)
             `;
 
             // Execute the query
@@ -76,7 +78,6 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
 });
 
 router.get('/', authenticateJWT, async (req: Request, res: Response) => {
-
     try {
         // Create request and execute query
         const pool: ConnectionPool = req.app.locals.db;
@@ -94,6 +95,7 @@ router.get('/', authenticateJWT, async (req: Request, res: Response) => {
 });
 router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: Response) => {
     const application: UpdateApplication = new UpdateApplication(req.body);
+    const user_id = parseInt((req as CustomRequest).token.userId)
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
         try {
             const pool: ConnectionPool = req.app.locals.db;
@@ -104,16 +106,17 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
             let field: keyof UpdateApplication;
             let setUpdates = 'SET '
             for (field in application) {
-                if (field == "filesOld" || field == "uploadFiles") continue;
-                if (field != "user_email") setUpdates += `${field} = @${field}, `
+                if (field == "filesOld" || field == "uploadFiles" || field == "user_email") continue;
+                setUpdates += `${field} = @${field}, `
                 if (field == 'file_paths') {
                     application.setSQLInput(request, field, JSON.stringify(application[field]))
                     continue;
                 }
                 application.setSQLInput(request, field, application[field])
             }
+            request.input("user_id",sql.Int,user_id)
             setUpdates = setUpdates.slice(0, -2);
-            const sqlQuery = `UPDATE Applications ${setUpdates} WHERE user_email = @user_email`
+            const sqlQuery = `UPDATE Applications ${setUpdates} WHERE user_id = @user_id`
             const result = await request.query(sqlQuery);
             console.log('Application updated successfully:', result.rowsAffected);
             res.status(200).json({ output: 'success', msg: 'application updated successfully' });
@@ -124,14 +127,14 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
         }
     })
 })
-router.get('/:user_email', authenticateJWT, async (req: Request, res: Response) => {
-    const user_email = req.params.user_email;
+router.get('/getUserApplication', authenticateJWT, async (req: Request, res: Response) => {
+    const user_id = parseInt((req as CustomRequest).token.userId)
     try {
         // Create request and execute query
         const pool: ConnectionPool = req.app.locals.db;
         const request: sql.Request = pool.request()
-        request.input('user_email', sql.NVarChar, user_email);
-        const sqlQuery = 'SELECT * FROM Applications WHERE user_email=@user_email'
+        request.input('user_id', sql.Int, user_id);
+        const sqlQuery = 'SELECT * FROM Applications WHERE user_id=@user_id'
         const result = await request.query(sqlQuery);
         if (result.recordset.length == 0) {
             res.status(200).json({ output: 'no records', msg: 'No application found', result: result });
