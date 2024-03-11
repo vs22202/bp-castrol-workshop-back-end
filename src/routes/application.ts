@@ -5,7 +5,7 @@ import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
 import fse from 'fs-extra';
 import { CustomRequest, authenticateJWT } from '../utils/authenticate'
-import SENDMAIL, { generateHTML } from '../utils/mail';
+import SENDMAIL, { generateHTML, generateHTMLUpdate } from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
 // Define required variables
 const router: Router = Router();
@@ -62,7 +62,7 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
             const options: Options = {
                 from: process.env.SENDER_EMAIL,
                 to: process.env.CASTROL_ADMIN_EMAIL,
-                subject: "New Certificate Application Submitted",
+                subject: `New Certificate Application Submitted by ${application.workshop_name}`,
                 text: `A new workshop has submitted an application. The workshop name is ${application.workshop_name}.`,
                 html: `<html>
                 <div style="padding-block: 32px;padding-inline: 72px;text-transform: capitalize;">
@@ -145,6 +145,38 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
             const sqlQuery = `UPDATE Applications ${setUpdates} WHERE user_id = @user_id`
             const result = await request.query(sqlQuery);
             console.log('Application updated successfully:', result.rowsAffected);
+            //Send New Application Added Alert
+            const request2 = pool.request();
+            request2.input('user_id', sql.Int, user_id);
+            const sqlQuery2 = "SELECT workshop_name,application_status FROM Applications WHERE user_id = @user_id"
+            const result2 = await request2.query(sqlQuery2);
+            if (result2.recordset[0].application_status != "Pending") {
+                const options: Options = {
+                    from: process.env.SENDER_EMAIL,
+                    to: process.env.CASTROL_ADMIN_EMAIL,
+                    subject: `New Update Has Been Submitted by ${result2.recordset[0].workshop_name}`,
+                    text: `A new update has been made to an application. The workshop name is ${result2.recordset[0].workshop_name}.`,
+                    html: `<html>
+                    <div style="padding-block: 32px;padding-inline: 72px;text-transform: capitalize;">
+                      <h2 style="margin: 0;padding: 0;font-size: 40;font-weight: bold;color: rgba(0, 153, 0, 1);">
+                        A New Update Has Been Made By A Workshop
+                      </h2>
+                      <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">Find the changes attached below.</h3>
+                    </div>
+                </html>`,
+                    attachments: [
+                        {
+                            filename: 'WorkshopDataUpdate.html',
+                            content:generateHTMLUpdate(application)
+                        }
+                    ]
+                };
+                SENDMAIL(options, (info: any) => {
+                    console.log("Application Edited Email sent successfully");
+                    console.log("MESSAGE ID: ", info.messageId);
+                });
+            }
+            
             res.status(200).json({ output: 'success', msg: 'application updated successfully' });
         }
         catch (error) {

@@ -3,8 +3,9 @@ import { fileStorage } from '../utils/multer';
 import multer, { Multer } from 'multer';
 import sql, { ConnectionPool } from 'mssql';
 import { User } from '../models/user';
+import bcrypt from "bcryptjs"
 
-// Define requeired variables
+// Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
 const otpTimeout: number = 300000;
@@ -59,11 +60,11 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         if (deleteOtpResult.rowsAffected[0] !== 1)
             throw new Error('Could not delete from Otp_Verification table');
 
-
+        const hashed_password = await bcrypt.hash(user.password, 10);
         // Save data to Users table
         const insertUserRequest = pool.request()
             .input('user_email', sql.NVarChar, user.user_email)
-            .input('password', sql.NVarChar, user.password)
+            .input('password', sql.NVarChar, hashed_password)
             .input('verified', sql.Bit, user.verified);
         sqlQuery = `INSERT INTO Users (user_email, password, verified) 
                     VALUES (@user_email, @password, @verified)`;
