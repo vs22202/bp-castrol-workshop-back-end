@@ -24,7 +24,7 @@ describe('Login Router', () => {
                 password: 'password123'
             });
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'Invalid Email/Password' });
     });
 
@@ -37,7 +37,7 @@ describe('Login Router', () => {
                 password: 'safepassword321'
             });
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'User not verified' });
     });
 

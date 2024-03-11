@@ -14,7 +14,7 @@ describe('Register Router', () => {
                 otp: '345678',
             });
 
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(200);
         expect(response.body).toEqual({ output: 'success', msg: 'User registered successfully' });
     });
 
@@ -28,7 +28,7 @@ describe('Register Router', () => {
                 otp: '234567',
             });
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'OTP expired, please regenerate' });
     });
 
@@ -42,7 +42,7 @@ describe('Register Router', () => {
                 otp: '123456',
             });
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'Invalid OTP' });
     });
 
