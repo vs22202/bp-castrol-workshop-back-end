@@ -28,7 +28,7 @@ export const authenticateJWTLogin = async (req: Request, res: Response, next: Ne
         const token = req.header('Authorization');
 
         if (!token) {
-            if (req.body.user_email && req.body.password) {
+            if ((req.body.user_email || req.body.user_mobile) && req.body.password) {
                 
                 next()
             }

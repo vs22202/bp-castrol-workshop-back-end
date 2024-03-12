@@ -15,7 +15,6 @@ export class Application {
     state: string
     city: string
     user_name: string
-    user_email: string
     user_mobile: number
     bay_count: number
     services_offered: string
@@ -37,7 +36,6 @@ export class Application {
         this.state = data.state;
         this.city = data.city;
         this.user_name = data.user_name;
-        this.user_email = data.user_email;
         this.user_mobile = data.user_mobile;
         this.bay_count = data.bay_count;
         this.services_offered = data.services_offered;

@@ -76,7 +76,7 @@ export const generateHTMLUpdate = (application: UpdateApplication) => {
     let field: keyof UpdateApplication;
     let data = ''
     for (field in application) {
-        if (field == "uploadFiles" || field =="filesOld"  || field == "user_email" || field=="last_modified_date") continue;
+        if (field == "uploadFiles" || field =="filesOld" || field=="last_modified_date") continue;
         let imgG=''
         if (field == "file_paths") {
             application[field]?.forEach((fileUrl) => {
