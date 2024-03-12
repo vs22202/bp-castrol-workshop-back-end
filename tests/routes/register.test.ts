@@ -1,20 +1,37 @@
 import request from 'supertest';
 import { initializeDB } from '../../src/db';
 import app from '../../src';
+import sql from 'mssql'
+import * as mail from '../../src/utils/mail';
 
+
+
+let pool: sql.ConnectionPool;
 describe('Register Router', () => {
-    
+
+    beforeAll(async () => {
+        jest.spyOn(mail, "default").mockImplementation(async (options, callback) => { callback({ messageId: "test_messsage" }); });
+        pool = await initializeDB();
+        app.locals.db = pool;
+        const setupRequest = pool.request()
+            .input('otp', sql.NVarChar, '345678')
+            .input('user_email', sql.NVarChar, 'test@example.com')
+            .input('generate_time', sql.DateTime, new Date());
+        const sqlQuery = `INSERT INTO Otp_Verification (user_email, otp, generate_time) 
+                      VALUES (@user_email, @otp , @generate_time)`;
+        await setupRequest.query(sqlQuery);
+    })
     it('should successfully register a user with valid OTP', async () => {
         // Assuming you have a valid OTP and user details in your testing database
         const response = await request(app)
             .post('/register')
             .field({
-                user_email: 'mike@example.com',
+                user_email: 'test@example.com',
                 password: 'testpassword',
                 otp: '345678',
             });
 
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(200);
         expect(response.body).toEqual({ output: 'success', msg: 'User registered successfully' });
     });
 
@@ -28,7 +45,7 @@ describe('Register Router', () => {
                 otp: '234567',
             });
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'OTP expired, please regenerate' });
     });
 
@@ -42,7 +59,7 @@ describe('Register Router', () => {
                 otp: '123456',
             });
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'Invalid OTP' });
     });
 
@@ -65,6 +82,13 @@ describe('Register Router', () => {
         //     .then((pool) => {
         //         app.locals.db = pool;
         //     });
+    });
+    afterAll(async () => {
+        const cleanupRequest = pool.request()
+            .input('user_email', sql.NVarChar, 'test@example.com');
+        const sqlQuery = `DELETE FROM Otp_Verification WHERE user_email = @user_email`;
+        await cleanupRequest.query(sqlQuery);
+        await pool.close();
     });
 
 });

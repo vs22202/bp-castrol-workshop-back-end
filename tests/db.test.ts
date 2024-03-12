@@ -1,8 +1,10 @@
+import { initializeDB } from "../src/db";
 
 
 describe("Database", () => {
   it('Database Connectivity', async () => {
-    expect(true).toBe(true);
+    const pool = await initializeDB()
+    expect(pool).toBeDefined();
   });
 });
 
