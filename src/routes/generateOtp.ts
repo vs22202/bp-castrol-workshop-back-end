@@ -169,7 +169,7 @@ router.post('/mobile', upload.any(), async (req: Request, res: Response) => {
                 throw new Error('Error inserting OTP');
         }
 
-        console.log("Send sms to user mobile");
+        console.log("Sending whatsapp message to user mobile");
         sendOTPWhatsapp(user_mobile,otp);
         
         // Send response
