@@ -3,6 +3,11 @@ import { fileStorage } from '../utils/multer';
 import multer, { Multer } from 'multer';
 import sql, { ConnectionPool } from 'mssql';
 import { User } from '../models/user';
+import jwt from 'jsonwebtoken';
+import dotenv = require('dotenv');
+import { authenticateJWTLogin } from '../utils/authenticate';
+import bcrypt from "bcryptjs"
+dotenv.config();
 
 // Define required variables
 const router: Router = Router();
@@ -13,7 +18,7 @@ const upload: Multer = multer({ storage: fileStorage });
  *      POST - To validate user login details from database
  */
 
-router.post('/', upload.any(), async (req: Request, res: Response) => {
+router.post('/', [upload.any(),authenticateJWTLogin], async (req: Request, res: Response) => {
     // Create user object
     const user: User = new User(req.body.user_email, req.body.password);
     let sqlQuery: string;
@@ -36,17 +41,25 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 
         // Login user
         const loginRequest = pool.request()
-            .input('user_email', sql.NVarChar, user.user_email)
-            .input('password', sql.NVarChar, user.password);
-        sqlQuery = `SELECT user_id,user_email 
+            .input('user_email', sql.NVarChar, user.user_email);
+        sqlQuery = `SELECT user_id,user_email,password 
                     FROM Users 
-                    WHERE user_email = @user_email AND password = @password`;
+                    WHERE user_email = @user_email`;
         loginRequest.query(sqlQuery)
-            .then((result) => {
+            .then(async (result) => {
                 if (result.recordset.length == 0)
                     res.status(400).json({ output: 'fail', msg: 'Invalid Email/Password' });
-                else
-                    res.status(200).json({ output: 'success', msg: 'Login Success', user: result.recordset[0] });
+                else {
+                    const passwordMatch = await bcrypt.compare(user.password, result.recordset[0].password);
+                    if (passwordMatch) {
+                        const accessToken = jwt.sign({userId: result.recordset[0].user_id}, process.env.ACCESS_TOKEN_SECRET || 'access');
+                        res.status(200).json({ output: 'success', msg: 'Login Success', user: result.recordset[0], auth_token: accessToken});
+                    }
+                    else {
+                        res.status(400).json({ output: 'fail', msg: 'Invalid Email/Password' });
+                    }
+                }
+                    
             })
 
 

@@ -1,0 +1,103 @@
+<html>
+  <style>
+    .mainContainer > * {
+      margin: 0;
+      padding: 0;
+    }
+    .mainContainer {
+      padding-block: 32px;
+      padding-inline: 72px;
+      display: flex;
+      flex-direction: column;
+      text-transform: capitalize;
+    }
+    .mainContainer > h2 {
+      font-size: 40;
+      font-weight: bold;
+      color: rgba(0, 153, 0, 1);
+    }
+    .mainContainer > h3 {
+      color: rgba(102, 102, 102, 1);
+      font-size: 28px;
+      font-weight: 500;
+    }
+    .dataGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+    }
+    .dataGrid::before {
+      content: "";
+      position: absolute;
+      top: 2.5%;
+      left: 47.5%;
+      height: 13%;
+      width: 4px;
+      background-color: rgba(229, 207, 0, 1);
+    }
+    .data {
+      width: 90%;
+      display: flex;
+      justify-content: space-between;
+    }
+    .data.image {
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      grid-column: 1/-1;
+    }
+    .dataName {
+      font-size: 20px;
+      font-weight: bold;
+      color: rgba(51, 51, 51, 1);
+    }
+    .dataValue {
+      font-size: 20px;
+      font-weight: 400;
+      color: rgba(102, 102, 102, 1);
+    }
+    .imageGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      width: 100%;
+      gap: 2em;
+    }
+    .imageGrid > a {
+      text-decoration: none;
+      color: transparent;
+      max-width: 100%;
+    }
+    .imageGrid > a > img,.imageGrid > a >video {
+      display: block;
+      max-width: 100%;
+      aspect-ratio: 1/1;
+    }
+
+    img,video{
+        max-width:100%;
+    }
+  </style>
+    <div class="mainContainer">
+      <h2>
+        A new application for certification has been submitted by a workshop
+      </h2>
+      <h3>here is the submitted information:</h3>
+      <div class="dataGrid">
+        <div class="data image">
+            <p class="dataName">Files Uploaded</p>
+            <div class="imageGrid">
+                <a href="" target="_blank">
+                    <img src="">
+                </a>
+                <a href="" target="_blank">
+                    <video src="">
+                </a>
+            </div>
+          </div>
+        <div class="data">
+            <p class="dataName">Hello</p>
+            <p class="dataValue">World</p>
+        </div>
+      </div>
+    </div>
+</html>

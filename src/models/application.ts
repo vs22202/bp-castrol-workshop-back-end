@@ -27,6 +27,7 @@ export class Application {
     file_paths: string[]
     application_status: string
     last_modified_date: string
+    user_id?:number
 
     // Default constructor
     constructor(data: any) {
@@ -100,6 +101,7 @@ export class UpdateApplication {
     application_status?: string
     last_modified_date?: string
     filesOld?: string[]
+    user_id?:number
     constructor(data: any) {
         if (data.filesOld && data.filesOld != "undefined") {
             const old_files: { filename: string, type: string, fileurl: string }[] = JSON.parse(data.filesOld)
@@ -147,7 +149,7 @@ export class UpdateApplication {
             case "consent_being_contacted":
             case "consent_process_data":
             case "consent_receive_info":
-                request.input(`${field}`, sql.Bit, value);
+                request.input(`${field}`, sql.Bit, value=="true");
                 return;
             case "bay_count":
                 request.input(`${field}`, sql.Int, value);

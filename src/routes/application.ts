@@ -4,7 +4,9 @@ import sql, { ConnectionPool } from 'mssql';
 import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
 import fse from 'fs-extra';
-
+import { CustomRequest, authenticateJWT } from '../utils/authenticate'
+import SENDMAIL, { generateHTML, generateHTMLUpdate } from '../utils/mail';
+import { Options } from 'nodemailer/lib/mailer';
 // Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
@@ -15,9 +17,10 @@ const upload: Multer = multer({ storage: fileStorage });
  *      GET   - To show current table entries
  */
 
-router.post('/', upload.any(), async (req: Request, res: Response) => {
+router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Response) => {
     // Create Application object
     const application: Application = new Application(req.body);
+    const user_id = parseInt((req as CustomRequest).token.userId)
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
 
         try {
@@ -39,22 +42,47 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
             request.input('brands', sql.NVarChar, application.brands);
             request.input('consent_process_data', sql.Bit, application.consent_process_data);
             request.input('consent_being_contacted', sql.Bit, application.consent_being_contacted);
-            request.input('consent_receive_info', sql.Bit, application.consent_receive_info);
+            request.input('consent_receive_info', sql.Bit, application.consent_receive_info == true);
             request.input('file_paths', sql.NVarChar, JSON.stringify(application.file_paths));
             request.input('application_status', sql.NVarChar, application.application_status);
             request.input('last_modified_date', sql.DateTime2, application.last_modified_date);
+            request.input('user_id', sql.Int, user_id);
 
             // Prepare the SQL query
             const sqlQuery = `
                 INSERT INTO Applications 
-                (workshop_name, workshop_post_code, address, state, city, user_name, user_email, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths, application_status, last_modified_date) 
-                VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_email, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths, @application_status, @last_modified_date)
+                (workshop_name, workshop_post_code, address, state, city, user_name, user_email, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths, application_status, last_modified_date,user_id) 
+                VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_email, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths, @application_status, @last_modified_date,@user_id)
             `;
 
             // Execute the query
             const result = await request.query(sqlQuery);
             console.log('Application inserted successfully:', result.rowsAffected);
-
+            //Send New Application Added Alert
+            const options: Options = {
+                from: process.env.SENDER_EMAIL,
+                to: process.env.CASTROL_ADMIN_EMAIL,
+                subject: `New Certificate Application Submitted by ${application.workshop_name}`,
+                text: `A new workshop has submitted an application. The workshop name is ${application.workshop_name}.`,
+                html: `<html>
+                <div style="padding-block: 32px;padding-inline: 72px;text-transform: capitalize;">
+                  <h2 style="margin: 0;padding: 0;font-size: 40;font-weight: bold;color: rgba(0, 153, 0, 1);">
+                    A New Application For Certification Has Been Submitted By A Workshop
+                  </h2>
+                  <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">The Submitted Data is attached below.</h3>
+                </div>
+            </html>`,
+                attachments: [
+                    {
+                        filename: 'WorkshopData.html',
+                        content:generateHTML(application)
+                    }
+                ]
+            };
+            SENDMAIL(options, (info: any) => {
+                console.log("Application Created Email sent successfully");
+                console.log("MESSAGE ID: ", info.messageId);
+            });
             // Send the response
             res.status(201).json({ output: 'success', msg: 'Application inserted successfully' });
 
@@ -75,8 +103,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 
 });
 
-router.get('/', async (req: Request, res: Response) => {
-
+router.get('/', authenticateJWT, async (req: Request, res: Response) => {
     try {
         // Create request and execute query
         const pool: ConnectionPool = req.app.locals.db;
@@ -92,8 +119,9 @@ router.get('/', async (req: Request, res: Response) => {
         res.status(500).json({ output: 'fail', msg: 'Error in fetching data' });
     }
 });
-router.post("/edit", upload.any(), async (req: Request, res: Response) => {
+router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: Response) => {
     const application: UpdateApplication = new UpdateApplication(req.body);
+    const user_id = parseInt((req as CustomRequest).token.userId)
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
         try {
             const pool: ConnectionPool = req.app.locals.db;
@@ -104,18 +132,51 @@ router.post("/edit", upload.any(), async (req: Request, res: Response) => {
             let field: keyof UpdateApplication;
             let setUpdates = 'SET '
             for (field in application) {
-                if (field == "filesOld" || field == "uploadFiles") continue;
-                if (field != "user_email") setUpdates += `${field} = @${field}, `
+                if (field == "filesOld" || field == "uploadFiles" || field == "user_email") continue;
+                setUpdates += `${field} = @${field}, `
                 if (field == 'file_paths') {
                     application.setSQLInput(request, field, JSON.stringify(application[field]))
                     continue;
                 }
                 application.setSQLInput(request, field, application[field])
             }
+            request.input("user_id",sql.Int,user_id)
             setUpdates = setUpdates.slice(0, -2);
-            const sqlQuery = `UPDATE Applications ${setUpdates} WHERE user_email = @user_email`
+            const sqlQuery = `UPDATE Applications ${setUpdates} WHERE user_id = @user_id`
             const result = await request.query(sqlQuery);
             console.log('Application updated successfully:', result.rowsAffected);
+            //Send New Application Added Alert
+            const request2 = pool.request();
+            request2.input('user_id', sql.Int, user_id);
+            const sqlQuery2 = "SELECT workshop_name,application_status FROM Applications WHERE user_id = @user_id"
+            const result2 = await request2.query(sqlQuery2);
+            if (result2.recordset[0].application_status != "Pending") {
+                const options: Options = {
+                    from: process.env.SENDER_EMAIL,
+                    to: process.env.CASTROL_ADMIN_EMAIL,
+                    subject: `New Update Has Been Submitted by ${result2.recordset[0].workshop_name}`,
+                    text: `A new update has been made to an application. The workshop name is ${result2.recordset[0].workshop_name}.`,
+                    html: `<html>
+                    <div style="padding-block: 32px;padding-inline: 72px;text-transform: capitalize;">
+                      <h2 style="margin: 0;padding: 0;font-size: 40;font-weight: bold;color: rgba(0, 153, 0, 1);">
+                        A New Update Has Been Made By A Workshop
+                      </h2>
+                      <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">Find the changes attached below.</h3>
+                    </div>
+                </html>`,
+                    attachments: [
+                        {
+                            filename: 'WorkshopDataUpdate.html',
+                            content:generateHTMLUpdate(application)
+                        }
+                    ]
+                };
+                SENDMAIL(options, (info: any) => {
+                    console.log("Application Edited Email sent successfully");
+                    console.log("MESSAGE ID: ", info.messageId);
+                });
+            }
+            
             res.status(200).json({ output: 'success', msg: 'application updated successfully' });
         }
         catch (error) {
@@ -124,14 +185,14 @@ router.post("/edit", upload.any(), async (req: Request, res: Response) => {
         }
     })
 })
-router.get('/:user_email', async (req: Request, res: Response) => {
-    const user_email = req.params.user_email;
+router.get('/getUserApplication', authenticateJWT, async (req: Request, res: Response) => {
+    const user_id = parseInt((req as CustomRequest).token.userId)
     try {
         // Create request and execute query
         const pool: ConnectionPool = req.app.locals.db;
         const request: sql.Request = pool.request()
-        request.input('user_email', sql.NVarChar, user_email);
-        const sqlQuery = 'SELECT * FROM Applications WHERE user_email=@user_email'
+        request.input('user_id', sql.Int, user_id);
+        const sqlQuery = 'SELECT * FROM Applications WHERE user_id=@user_id'
         const result = await request.query(sqlQuery);
         if (result.recordset.length == 0) {
             res.status(200).json({ output: 'no records', msg: 'No application found', result: result });
