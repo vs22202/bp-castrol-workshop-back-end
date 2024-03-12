@@ -20,6 +20,16 @@ describe('Register Router', () => {
         const sqlQuery = `INSERT INTO Otp_Verification (user_email, otp, generate_time) 
                       VALUES (@user_email, @otp , @generate_time)`;
         await setupRequest.query(sqlQuery);
+        const setupInvalidRequest = pool.request()
+            .input('otp', sql.NVarChar, '346678')
+            .input('user_email', sql.NVarChar, 'invalidtest@example.com')
+            .input('generate_time', sql.DateTime, new Date());
+        await setupInvalidRequest.query(sqlQuery);
+        const setupExpiredRequest = pool.request()
+            .input('otp', sql.NVarChar, '346678')
+            .input('user_email', sql.NVarChar, 'expiredtest@example.com')
+            .input('generate_time', sql.DateTime, new Date(2002, 2, 22));
+        await setupExpiredRequest.query(sqlQuery);
     })
     it('should successfully register a user with valid OTP', async () => {
         // Assuming you have a valid OTP and user details in your testing database
@@ -35,39 +45,36 @@ describe('Register Router', () => {
         expect(response.body).toEqual({ output: 'success', msg: 'User registered successfully' });
     });
 
-    it('should fail registration with an expired OTP', async () => {
+    it('should fail registration with an invalid OTP', async () => {
         // Assuming you have an expired OTP in your testing database
         const response = await request(app)
             .post('/register')
             .field({
-                user_email: 'nonexistent1@example.com',
+                user_email: 'invalidtest@example.com',
                 password: 'testpassword',
                 otp: '234567',
             });
 
-        expect(response.status).toBe(500);
-        expect(response.body).toEqual({ output: 'fail', msg: 'OTP expired, please regenerate' });
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ output: 'fail', msg: 'Invalid OTP' });
     });
 
-    it('should fail registration with an invalid OTP', async () => {
+    it('should fail registration with an expired OTP', async () => {
         // Assuming you have an invalid OTP in your testing database
         const response = await request(app)
             .post('/register')
             .field({
-                user_email: 'nonexistent2@example.com',
+                user_email: 'expiredtest@example.com',
                 password: 'testpassword',
-                otp: '123456',
+                otp: '346678',
             });
 
-        expect(response.status).toBe(500);
-        expect(response.body).toEqual({ output: 'fail', msg: 'Invalid OTP' });
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ output: 'fail', msg: 'OTP expired, please regenrate'});
     });
 
     it('should handle SQL error during registration', async () => {
-        // Close the testing database connection to simulate an error
-        const pool = app.locals.db;
-        // await pool.close();
-
+        app.locals.db = undefined;
         const response = await request(app)
             .post('/register')
             .field({
@@ -78,16 +85,18 @@ describe('Register Router', () => {
 
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'Error inserting data' });
-        // initializeDB()
-        //     .then((pool) => {
-        //         app.locals.db = pool;
-        //     });
+        app.locals.db = pool;
+
     });
     afterAll(async () => {
-        const cleanupRequest = pool.request()
-            .input('user_email', sql.NVarChar, 'test@example.com');
-        const sqlQuery = `DELETE FROM Otp_Verification WHERE user_email = @user_email`;
-        await cleanupRequest.query(sqlQuery);
+        const databasePromises: Promise<sql.IResult<any>>[] = [];
+        ['test@example.com', 'invalidtest@example.com', 'expiredtest@example.com'].forEach( async (user_email) => {
+            const cleanupRequest = pool.request()
+                .input('user_email', sql.NVarChar, user_email);
+            const sqlQuery = `DELETE FROM Otp_Verification WHERE user_email = @user_email`;
+            databasePromises.push( cleanupRequest.query(sqlQuery));
+        })
+        await Promise.all(databasePromises);
         await pool.close();
     });
 
