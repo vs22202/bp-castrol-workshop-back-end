@@ -1,9 +1,18 @@
 import request from 'supertest';
 import app from '../../src';
 import { initializeDB } from '../../src/db';
+import sql from 'mssql'
+import * as mail from '../../src/utils/mail';
 
+
+let pool : sql.ConnectionPool;
 describe('Application Router', () => {
-    let pool = app.locals.db;
+
+    beforeAll(async () => {
+        jest.spyOn(mail, "default").mockImplementation(async (options, callback) => { callback({messageId:"test_messsage"}); });
+        pool = await initializeDB();
+        app.locals.db = pool;
+    });
     describe('POST /', () => {
         it('should upload application data successfully', async () => {
             const response = await request(app)
@@ -65,5 +74,9 @@ describe('Application Router', () => {
             //     app.locals.db = pool;
             // });
         });
+    });
+
+    afterAll(async () => {
+        await pool.close();
     });
 });

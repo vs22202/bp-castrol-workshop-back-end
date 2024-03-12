@@ -1,13 +1,29 @@
 import request from 'supertest';
 import app from '../../src';
+import sql from 'mssql'
+import { initializeDB } from '../../src/db'; 
 
+let pool: sql.ConnectionPool
 describe('Login Router', () => {
+
+    beforeAll(async () => {
+        pool = await initializeDB();
+        app.locals.db = pool;
+        const setupRequest = pool.request()
+            .input('user_email', sql.NVarChar, 'test@example.com')
+            .input('password', sql.NVarChar, 'password123')
+            .input('verified', sql.Bit, 1);
+        const sqlQuery = `INSERT INTO Users (user_email, password, verified) 
+                      VALUES (@user_email, @password , @verified)`;
+        await setupRequest.query(sqlQuery);
+    })
+
     it('should successfully login with valid credentials', async () => {
         // Assuming you have a user with verified status and valid credentials in your testing database
         const response = await request(app)
             .post('/login')
             .field({
-                user_email: 'john@example.com',
+                user_email: 'test@example.com',
                 password: 'password123'
             });
 
@@ -21,7 +37,7 @@ describe('Login Router', () => {
             .post('/login')
             .field({
                 user_email: 'test@example.com',
-                password: 'password123'
+                password: 'password13'
             });
 
         expect(response.status).toBe(500);
@@ -52,5 +68,9 @@ describe('Login Router', () => {
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'Server side error' });
     });*/
+    
+    afterAll(async () => {
+        await pool.close();
+    })
 
 });
