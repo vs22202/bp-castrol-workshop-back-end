@@ -77,7 +77,7 @@ router.post('/', [upload.any(),authenticateJWTLogin], async (req: Request, res: 
 
 router.post('/mobile', [upload.any(),authenticateJWTLogin], async (req: Request, res: Response) => {
     // Create user object
-    const user: User = new User(req.body.password,undefined,req.body.user_mobile);
+    const user: User = new User(req.body.password,undefined,parseInt(req.body.user_mobile));
     let sqlQuery: string;
     try {
         // Get database connection
