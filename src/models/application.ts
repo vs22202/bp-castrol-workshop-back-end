@@ -41,9 +41,9 @@ export class Application {
         this.services_offered = data.services_offered;
         this.expertise = data.expertise;
         this.brands = data.brands;
-        this.consent_process_data = data.consent_process_data;
-        this.consent_being_contacted = data.consent_being_contacted;
-        this.consent_receive_info = data.consent_receive_info;
+        this.consent_process_data = data.consent_process_data == "true";
+        this.consent_being_contacted = data.consent_being_contacted == "true";
+        this.consent_receive_info = data.consent_receive_info == "true";
         this.application_status = ApplicationStatus.Pending;
         this.last_modified_date = (new Date()).toISOString();
 

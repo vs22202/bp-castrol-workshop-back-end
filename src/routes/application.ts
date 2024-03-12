@@ -41,7 +41,7 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
             request.input('brands', sql.NVarChar, application.brands);
             request.input('consent_process_data', sql.Bit, application.consent_process_data);
             request.input('consent_being_contacted', sql.Bit, application.consent_being_contacted);
-            request.input('consent_receive_info', sql.Bit, application.consent_receive_info == true);
+            request.input('consent_receive_info', sql.Bit, application.consent_receive_info);
             request.input('file_paths', sql.NVarChar, JSON.stringify(application.file_paths));
             request.input('application_status', sql.NVarChar, application.application_status);
             request.input('last_modified_date', sql.DateTime2, application.last_modified_date);
