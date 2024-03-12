@@ -28,7 +28,6 @@ export const authenticateJWTLogin = async (req: Request, res: Response, next: Ne
         const token = req.header('Authorization');
 
         if (!token) {
-            console.log(req.body)
             if (req.body.user_email && req.body.password) {
                 
                 next()

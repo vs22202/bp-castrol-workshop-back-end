@@ -74,7 +74,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
 
 
         // Send response
-        res.status(201).json({ output: 'success', msg: 'User registered successfully' });
+        res.status(200).json({ output: 'success', msg: 'User registered successfully' });
 
     } catch (error) {
         // Handle error

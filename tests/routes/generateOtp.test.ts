@@ -1,7 +1,19 @@
 import request from 'supertest';
 import app from '../../src';
+import sql from 'mssql'
+import { initializeDB } from '../../src/db';
+import * as mail from '../../src/utils/mail';
 
+let pool: sql.ConnectionPool;
 describe('generateOtp Router', () => {
+
+    
+    //write the beofer all function to initialize the database
+    beforeAll(async () => {
+        jest.spyOn(mail, "default").mockImplementation(async (options, callback) => { callback({messageId:"test_messsage"}); });
+        pool = await initializeDB();
+        app.locals.db = pool;
+    })
 
     it('should successfully generate and send OTP', async () => {
         const response = await request(app)
@@ -45,5 +57,8 @@ describe('generateOtp Router', () => {
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ output: 'fail', msg: 'Server error' });
     });*/
+    afterAll(async () => {
+        await pool.close();
+    })
 });
 
