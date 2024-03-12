@@ -1,25 +1,38 @@
-import express, { Request, Response, NextFunction } from 'express';
-import applicationRoutes from './routes/application';
-import { fileStorage } from './utils/multer';
-import multer from 'multer';
+import { initializeDB } from './db';
+import express, { Request, Response } from 'express';
+import cors from "cors";
 
 const app = express();
 const port = process.env.PORT || 3000;
+app.use(cors());
 
-app.use(multer({ storage: fileStorage}).array('photos', 12));
-app.use('/application', applicationRoutes);
+//  Routes
+app.use('/application', require('./routes/application').default);
+app.use('/register', require('./routes/register').default);
+app.use('/login', require('./routes/login').default);
+app.use('/generateOtp', require('./routes/generateOtp').default);
 
 app.get('/', (req: Request, res: Response) => {
-    res.send('Hello Welcome!');
+    res.send('Application started');
 });
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err.stack);
-    res.status(500).send('Something went wrong');
-});
-if (process.env.TEST != 'true') {
-    app.listen(port, () => {
-        console.log(`Server running at http://localhost:${port}`);
+
+// Listen on PORT
+if (process.env.MODE != 'test') {
+    // Initialize Database
+    initializeDB()
+        .then((pool) => {
+            app.locals.db = pool;
+            app.listen(port, () => {
+                console.log(`Server running at http://localhost:${port}`);
+            });
+        });
+}
+else {
+    app.listen(0, async function () {
+        // const pool = await initializeDB();
+        // app.locals.db = pool;
     });
 }
+
 export default app;

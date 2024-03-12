@@ -1,23 +1,27 @@
-import tedious = require('tedious')
 import dotenv = require('dotenv');
 dotenv.config();
+const sql = require('mssql');
 
+// Database configurations
 const config = {
+    // Test server 
     test: {
-        server: process.env.TEST_SERVER_NAME,
+        server: 'localhost',
         options: {
             port: 1433,
-            database: process.env.TEST_DATABASE_NAME
+            database: 'bp_capstone_project',
+            trustServerCertificate: true
         },
         authentication: {
             type: "default",
             options: {
-                userName: process.env.USER_NAME,
-                password: process.env.PASSWORD,
-            }
+                userName: 'sa',
+                password: 'CorrectHorseBatteryStapleFor$',
+            },
         }
     },
-    development: {
+    // Development server 
+    production: {
         server: process.env.SERVER_NAME,
         options: {
             port: 1433,
@@ -30,27 +34,37 @@ const config = {
                 password: process.env.PASSWORD,
             }
         }
+    },
+    development: {
+        server: 'localhost',
+        options: {
+            port: 1433,
+            database: 'bp_capstone_project',
+            trustServerCertificate: true
+        },
+        authentication: {
+            type: "default",
+            options: {
+                userName: 'sa',
+                password: 'CorrectHorseBatteryStapleFor$',
+            },
+        }
     }
 };
-let connection:tedious.Connection|null = null;
-export async function initializeDB(): Promise<tedious.Connection> {
-    if (connection == null) {
-        const conn = new tedious.Connection(process.env.TEST == "true" ? config.test : config.development);
-        return new Promise((resolve, reject) => {
-            conn.on("connect", (err: Error): void => {
-                if (err) {
-                    console.log('Error: ', err);
-                    reject(err);
-                    return;
-                }
-                else {
-                    connection = conn;
-                    resolve(conn)
-                }
-                console.log("Database Connection Established");
-            });
-            conn.connect();
-        })
+
+
+export async function initializeDB() {
+    try {
+        // Connect to SQL Connection Pool
+        const sqlPool = await new sql.ConnectionPool(process.env.MODE == "test" ? config.test : process.env.MODE == "dev" ? config.development : config.production);
+        const pool = await sqlPool.connect();
+
+        console.log('Database Connection Established');
+        return pool;
+
+    } catch (err) {
+        // Handle error
+        console.log(err);
+        return null;
     }
-    else return connection;
 }
