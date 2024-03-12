@@ -5,6 +5,7 @@ import multer, { Multer } from 'multer';
 import SENDMAIL from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
 import generateOTP from '../utils/generateOtp';
+import sendOTPWhatsapp from '../utils/mobile_message';
 
 // Define requeired variables
 const router: Router = Router();
@@ -39,7 +40,6 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
             res.status(400).json({ output: 'fail', msg: 'User already verified' });
             return;
         }
-
 
         // Generate OTP
         const otp: string = generateOTP()
@@ -91,6 +91,87 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         });
 
 
+        // Send response
+        res.status(200).json({ output: 'success', msg: 'OTP send successfully' });
+
+    } catch (error) {
+        // Handle error
+        console.log(error);
+        res.status(500).json({ output: 'fail', msg: 'Server error' });
+    }
+
+});
+/**
+ * Router
+ *      POST - generate OTP, send message(whatsapp) to user and store in table.
+ * 
+ * Otp_Verification table
+ *      user_mobile    - string
+ *      user_email     - string
+ *      otp                     - string
+ *      generate_time           - datetime2
+ */
+
+router.post('/mobile', upload.any(), async (req: Request, res: Response) => {
+    const user_mobile = req.body.user_mobile;
+    let sqlQuery: string;
+
+    try {
+        // Create a new request
+        const pool: ConnectionPool = req.app.locals.db;
+
+
+        // Check if user is verified
+        const verifiedStatusRequest = pool.request()
+            .input('user_mobile', sql.BigInt, user_mobile);
+        sqlQuery = `SELECT * 
+                    FROM Users 
+                    WHERE user_mobile=@user_mobile`;
+        const verifiedStatus = await verifiedStatusRequest.query(sqlQuery);
+        if (verifiedStatus.recordset[0]?.verified === true) {
+            res.status(400).json({ output: 'fail', msg: 'User already verified' });
+            return;
+        }
+        
+        // Generate OTP
+        const otp: string = generateOTP()
+        // Check OTP table
+        const checkOtpExistRequest = pool.request()
+            .input('user_mobile', sql.BigInt, user_mobile);
+        sqlQuery = `SELECT COUNT(*) AS count 
+                    FROM Otp_Verification 
+                    WHERE user_mobile=@user_mobile`;
+        const checkOtpExistsResult = await checkOtpExistRequest.query(sqlQuery);
+
+        if (checkOtpExistsResult.recordset[0].count > 0) {
+            // Update OTP in table
+            const updateOtpRequest = pool.request()
+                .input('otp', sql.NVarChar, otp)
+                .input('user_mobile', sql.BigInt, user_mobile)
+                .input('generate_time', sql.DateTime, new Date());
+            sqlQuery = `UPDATE Otp_Verification 
+                        SET otp=@otp, generate_time=@generate_time 
+                        WHERE user_mobile=@user_mobile`;
+            const updateOtpResult = await updateOtpRequest.query(sqlQuery);
+            if (updateOtpResult.rowsAffected[0] !== 1)
+                throw new Error('Error updating OTP');
+        }
+        else {
+            // Insert OTP to table
+            const addOtpRequest = pool.request()
+                .input('otp', sql.NVarChar, otp)
+                .input('user_mobile', sql.BigInt, user_mobile)
+                .input('generate_time', sql.DateTime, new Date());
+            sqlQuery = `INSERT INTO Otp_Verification (user_mobile, otp, generate_time) 
+                        VALUES (@user_mobile, @otp , @generate_time)`;
+            const addOtpResult = await addOtpRequest.query(sqlQuery);
+            if (addOtpResult.rowsAffected[0] !== 1)
+                throw new Error('Error inserting OTP');
+        }
+
+        console.log("Sending whatsapp message to user mobile");
+        sendOTPWhatsapp(user_mobile,otp);
+        
         // Send response
         res.status(200).json({ output: 'success', msg: 'OTP send successfully' });
 

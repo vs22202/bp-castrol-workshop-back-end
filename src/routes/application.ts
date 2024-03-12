@@ -34,7 +34,6 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
             request.input('state', sql.NVarChar, application.state);
             request.input('city', sql.NVarChar, application.city);
             request.input('user_name', sql.NVarChar, application.user_name);
-            request.input('user_email', sql.NVarChar, application.user_email);
             request.input('user_mobile', sql.NVarChar, application.user_mobile);
             request.input('bay_count', sql.Int, application.bay_count);
             request.input('services_offered', sql.NVarChar, application.services_offered);
@@ -42,7 +41,7 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
             request.input('brands', sql.NVarChar, application.brands);
             request.input('consent_process_data', sql.Bit, application.consent_process_data);
             request.input('consent_being_contacted', sql.Bit, application.consent_being_contacted);
-            request.input('consent_receive_info', sql.Bit, application.consent_receive_info == true);
+            request.input('consent_receive_info', sql.Bit, application.consent_receive_info);
             request.input('file_paths', sql.NVarChar, JSON.stringify(application.file_paths));
             request.input('application_status', sql.NVarChar, application.application_status);
             request.input('last_modified_date', sql.DateTime2, application.last_modified_date);
@@ -51,8 +50,8 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
             // Prepare the SQL query
             const sqlQuery = `
                 INSERT INTO Applications 
-                (workshop_name, workshop_post_code, address, state, city, user_name, user_email, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths, application_status, last_modified_date,user_id) 
-                VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_email, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths, @application_status, @last_modified_date,@user_id)
+                (workshop_name, workshop_post_code, address, state, city, user_name, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths, application_status, last_modified_date,user_id) 
+                VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths, @application_status, @last_modified_date,@user_id)
             `;
 
             // Execute the query
@@ -132,7 +131,7 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
             let field: keyof UpdateApplication;
             let setUpdates = 'SET '
             for (field in application) {
-                if (field == "filesOld" || field == "uploadFiles" || field == "user_email") continue;
+                if (field == "filesOld" || field == "uploadFiles") continue;
                 setUpdates += `${field} = @${field}, `
                 if (field == 'file_paths') {
                     application.setSQLInput(request, field, JSON.stringify(application[field]))
