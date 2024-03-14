@@ -65,7 +65,7 @@ describe('generateOtp Router', () => {
             .field('user_email', 'tempmail@gmail.com');
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ output: 'success', msg: 'OTP send successfully' });
+        expect(response.body).toEqual({ output: 'success', msg: 'OTP sent successfully' });
     });
 
     it('Should successfully update and send OTP', async () => {
@@ -74,7 +74,7 @@ describe('generateOtp Router', () => {
             .field('user_email', 'updateotp@gmail.com');
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ output: 'success', msg: 'OTP send successfully' });
+        expect(response.body).toEqual({ output: 'success', msg: 'OTP sent successfully' });
     });
 
     it('Should handle user already verified error', async () => {
@@ -107,7 +107,7 @@ describe('generateOtp Router', () => {
             .field('user_mobile', 1234567891);
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ output: 'success', msg: 'OTP send successfully' });
+        expect(response.body).toEqual({ output: 'success', msg: 'OTP sent successfully' });
     });
 
     it('Should successfully update and send OTP for mobile', async () => {
@@ -116,7 +116,7 @@ describe('generateOtp Router', () => {
             .field('user_mobile', 1234567893);
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual({ output: 'success', msg: 'OTP send successfully' });
+        expect(response.body).toEqual({ output: 'success', msg: 'OTP sent successfully' });
     });
 
     it('Should handle user already verified error for mobile', async () => {
