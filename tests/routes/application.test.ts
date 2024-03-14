@@ -14,7 +14,7 @@ describe('Application Router', () => {
         app.locals.db = pool;
     });
     describe('POST /', () => {
-        it('should upload application data successfully', async () => {
+        it('should upload application data successfull', async () => {
             const response = await request(app)
                 .post('/application')
                 .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUsImlhdCI6MTcxMDEzNDY0NH0.Utx7oLEkzwlvIUOI_-5dn0jfNr37mt1oiB9pizlzn-8")
