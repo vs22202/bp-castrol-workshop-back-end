@@ -5,8 +5,9 @@ import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
 import fse from 'fs-extra';
 import { CustomRequest, authenticateJWT } from '../utils/authenticate'
-import SENDMAIL, { generateHTML, generateHTMLUpdate } from '../utils/mail';
+import SENDMAIL, { generateHTML} from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
+import jwt from 'jsonwebtoken';
 // Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
@@ -58,6 +59,7 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
             const result = await request.query(sqlQuery);
             console.log('Application inserted successfully:', result.rowsAffected);
             //Send New Application Added Alert
+            const accessToken = jwt.sign({ userId: user_id }, process.env.ACCESS_TOKEN_SECRET || 'access');
             const options: Options = {
                 from: process.env.SENDER_EMAIL,
                 to: process.env.CASTROL_ADMIN_EMAIL,
@@ -69,12 +71,14 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
                     A New Application For Certification Has Been Submitted By A Workshop
                   </h2>
                   <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">The Submitted Data is attached below.</h3>
+                  <a href="http://localhost:3000/castrol_admin?auth_token=${accessToken}">Click here to view the submitted Data</a>
+
                 </div>
             </html>`,
                 attachments: [
                     {
                         filename: 'WorkshopData.html',
-                        content:generateHTML(application)
+                        content: await generateHTML(accessToken)
                     }
                 ]
             };
@@ -150,6 +154,7 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
             const sqlQuery2 = "SELECT workshop_name,application_status FROM Applications WHERE user_id = @user_id"
             const result2 = await request2.query(sqlQuery2);
             if (result2.recordset[0].application_status != "Pending") {
+                const accessToken = jwt.sign({ userId: user_id }, process.env.ACCESS_TOKEN_SECRET || 'access');
                 const options: Options = {
                     from: process.env.SENDER_EMAIL,
                     to: process.env.CASTROL_ADMIN_EMAIL,
@@ -161,12 +166,13 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
                         A New Update Has Been Made By A Workshop
                       </h2>
                       <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">Find the changes attached below.</h3>
+                      <a href="http://localhost:3000/castrol_admin?auth_token=${accessToken}">Click here to view the submitted Data</a>
                     </div>
                 </html>`,
                     attachments: [
                         {
                             filename: 'WorkshopDataUpdate.html',
-                            content:generateHTMLUpdate(application)
+                            content: await generateHTML(accessToken)
                         }
                     ]
                 };
