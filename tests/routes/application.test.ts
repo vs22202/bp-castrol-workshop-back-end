@@ -1,7 +1,7 @@
 import app from "../../src";
 import request from "supertest";
 import { Application } from "../../src/models/application";
-describe("Application API", () => {
+describe("Application APC", () => {
     it('GET /application', async () => {
         const response = await request(app).get("/application");
         const temp: Application = {
