@@ -29,11 +29,5 @@ if (process.env.MODE != 'test') {
             });
         });
 }
-else {
-    app.listen(0, async function () {
-        // const pool = await initializeDB();
-        // app.locals.db = pool;
-    });
-}
 
 export default app;

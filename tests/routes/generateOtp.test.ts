@@ -3,6 +3,7 @@ import app from '../../src';
 import sql from 'mssql'
 import { initializeDB } from '../../src/db';
 import * as mail from '../../src/utils/mail';
+import * as mobile from '../../src/utils/mobile_message'
 
 let pool: sql.ConnectionPool;
 describe('generateOtp Router', () => {
@@ -11,6 +12,7 @@ describe('generateOtp Router', () => {
     //write the beofer all function to initialize the database
     beforeAll(async () => {
         jest.spyOn(mail, "default").mockImplementation(async (options, callback) => { callback({messageId:"test_messsage"}); });
+        jest.spyOn(mobile, "default").mockImplementation(async (recipient: string,otp:string) => { console.log("Mobile OTP sent successfully"); });
         pool = await initializeDB();
         app.locals.db = pool;
     })
@@ -47,6 +49,14 @@ describe('generateOtp Router', () => {
         expect(response.body).toEqual({ output: 'fail', msg: 'Server error' });
     });
 
+    it('should successfully generate and send OTP to the user\'s mobile', async () => {
+        const response = await request(app)
+            .post('/generateOtp/mobile')
+            .field('user_mobile','919240456788');
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ output: 'success', msg: 'OTP sent successfully' });
+    });
     /*it('should handle error during OTP sendMail', async () => {
         // Assuming you have reopened the testing database connection
 
