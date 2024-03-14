@@ -173,7 +173,7 @@ router.post('/mobile', upload.any(), async (req: Request, res: Response) => {
         sendOTPWhatsapp(user_mobile,otp);
         
         // Send response
-        res.status(200).json({ output: 'success', msg: 'OTP send successfully' });
+        res.status(200).json({ output: 'success', msg: 'OTP sent successfully' });
 
     } catch (error) {
         // Handle error
