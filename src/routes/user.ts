@@ -128,7 +128,7 @@ router.post('/generateResetOtp',upload.any(), async (req: Request, res: Response
             const options: Options = {
                 from: process.env.SENDER_EMAIL,
                 to: user_email,
-                subject: "Email Verification",
+                subject: "Reset Password",
                 text: `Your OTP for reset password is ${otp}.\nDo not share the OTP with anyone.\n`
             };
             SENDMAIL(options, (info: any) => {
