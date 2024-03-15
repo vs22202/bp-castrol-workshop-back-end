@@ -3,14 +3,16 @@ import { initializeDB } from '../../src/db';
 import app from '../../src';
 import sql from 'mssql'
 import * as mail from '../../src/utils/mail';
-
-
+import { Options } from 'nodemailer/lib/mailer';
 
 let pool: sql.ConnectionPool;
 describe('Register Router', () => {
 
     beforeAll(async () => {
-        jest.spyOn(mail, "default").mockImplementation(async (options, callback) => { callback({ messageId: "test_messsage" }); });
+        jest.spyOn(mail, "default")
+            .mockImplementation(async (options: Options, callback: any) => {
+                callback({ messageId: "test_messsage" });
+            });
         pool = await initializeDB();
         app.locals.db = pool;
 
@@ -51,8 +53,11 @@ describe('Register Router', () => {
             .input('user_mobile', sql.BigInt, 1234567893)
             .input('generate_time', sql.DateTime, new Date(2002, 2, 22));
         await setupMobileExpiredRequest.query(sqlQuery);
+    });
 
-    })
+/**
+ * Email tests
+ */
 
     it('Should successfully register a user with valid OTP', async () => {
         // Assuming you have a valid OTP and user details in your testing database
@@ -110,6 +115,11 @@ describe('Register Router', () => {
         expect(response.body).toEqual({ output: 'fail', msg: 'Error inserting data' });
         app.locals.db = pool;
     });
+
+    
+/**
+ * Mobile tests
+ */
 
     it('Should successfully register a user with valid OTP and mobile number', async () => {
         // Assuming you have a valid OTP and user details with mobile number in your testing database

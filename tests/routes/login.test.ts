@@ -44,6 +44,10 @@ describe('Login Router', () => {
         await setupUnverifiedMobileUserRequest.query(sqlQuery);
     });
 
+/**
+ * Email tests
+ */
+
     it('Should successfully login with valid credentials', async () => {
         const response = await request(app)
             .post('/login')
@@ -107,7 +111,11 @@ describe('Login Router', () => {
         app.locals.db = pool;
     });
 
-    it('Should successfully login with valid credentials', async () => {
+/**
+ * Mobile tests
+ */
+
+    it('Should successfully mobile login with valid credentials', async () => {
         const response = await request(app)
             .post('/login/mobile')
             .field({
@@ -119,7 +127,7 @@ describe('Login Router', () => {
         expect(response.body).toEqual({ output: 'success', msg: 'Login Success', user: expect.any(Object), auth_token: expect.any(String) });
     });
 
-    it('Should fail login with invalid password', async () => {
+    it('Should fail mobile login with invalid password', async () => {
         const response = await request(app)
             .post('/login/mobile')
             .field({
@@ -131,7 +139,7 @@ describe('Login Router', () => {
         expect(response.body).toEqual({ output: 'fail', msg: 'Invalid Password' });
     });
 
-    it('Should fail login with invalid mobile', async () => {
+    it('Should fail mobile login with invalid mobile no.', async () => {
         const response = await request(app)
             .post('/login/mobile')
             .field({
@@ -143,7 +151,7 @@ describe('Login Router', () => {
         expect(response.body).toEqual({ output: 'fail', msg: 'Invalid Mobile No.' });
     });
 
-    it('Should fail login for unverified mobile user', async () => {
+    it('Should fail mobile login for unverified mobile user', async () => {
         const response = await request(app)
             .post('/login/mobile')
             .field({
@@ -155,7 +163,7 @@ describe('Login Router', () => {
         expect(response.body).toEqual({ output: 'fail', msg: 'User not verified' });
     });
 
-    it('Should handle SQL error during login', async () => {
+    it('Should handle SQL error during mobile login', async () => {
         app.locals.db = undefined;
 
         const response = await request(app)
