@@ -2,8 +2,9 @@ import request from 'supertest';
 import app from '../../src';
 import sql from 'mssql'
 import { initializeDB } from '../../src/db';
-import { NextFunction } from 'express';
 import bcrypt from "bcryptjs";
+import * as authenticate from '../../src/utils/authenticate';
+import { Request, Response, NextFunction } from 'express';
 
 let pool: sql.ConnectionPool
 describe('Login Router', () => {
@@ -12,9 +13,10 @@ describe('Login Router', () => {
         pool = await initializeDB();
         app.locals.db = pool;
 
-        jest.mock('../../src/utils/authenticate', () => ({
-            authenticateJWTLogin: (req: Request, res: Response, next: NextFunction) => next(),
-        }));
+        jest.spyOn(authenticate, "authenticateJWTLogin")
+            .mockImplementation(async (req: Request, res: Response, next: NextFunction) => {
+                next();
+            });
 
         let sqlQuery: string;
         sqlQuery = `INSERT INTO Users (user_email, password, verified) 
@@ -44,9 +46,9 @@ describe('Login Router', () => {
         await setupUnverifiedMobileUserRequest.query(sqlQuery);
     });
 
-/**
- * Email tests
- */
+    /**
+     * Email tests
+     */
 
     it('Should successfully login with valid credentials', async () => {
         const response = await request(app)
@@ -55,7 +57,7 @@ describe('Login Router', () => {
                 user_email: 'testlogin2@example.com',
                 password: 'password123'
             });
-        console.log(response);
+
         expect(response.status).toBe(200);
         expect(response.body).toEqual({ output: 'success', msg: 'Login Success', user: expect.any(Object), auth_token: expect.any(String) });
     });
@@ -111,9 +113,9 @@ describe('Login Router', () => {
         app.locals.db = pool;
     });
 
-/**
- * Mobile tests
- */
+    /**
+     * Mobile tests
+     */
 
     it('Should successfully mobile login with valid credentials', async () => {
         const response = await request(app)
