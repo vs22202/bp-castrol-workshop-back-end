@@ -26,6 +26,11 @@ describe('Login Router', () => {
             .input('password', sql.NVarChar, await bcrypt.hash('password123', 10))
             .input('verified', sql.Bit, 1);
         await setupRequest.query(sqlQuery);
+        const setupRequest2 = pool.request()
+            .input('user_email', sql.NVarChar, 'testlogin@example.com')
+            .input('password', sql.NVarChar, await bcrypt.hash('password123', 10))
+            .input('verified', sql.Bit, 1);
+        await setupRequest2.query(sqlQuery);
         const setupUnverifiedUserRequest = pool.request()
             .input('user_email', sql.NVarChar, 'emily@example.com')
             .input('password', sql.NVarChar, await bcrypt.hash('safepassword321', 10))
@@ -183,7 +188,7 @@ describe('Login Router', () => {
     afterAll(async () => {
         const databasePromises: Promise<sql.IResult<any>>[] = [];
 
-        ['testlogin2@example.com', 'emily@example.com'].forEach(async (user_email) => {
+        ['testlogin2@example.com','testlogin@example.com' , 'emily@example.com'].forEach(async (user_email) => {
             const cleanupRequest = pool.request()
                 .input('user_email', sql.NVarChar, user_email);
             const sqlQuery = `DELETE FROM Users WHERE user_email = @user_email`;
