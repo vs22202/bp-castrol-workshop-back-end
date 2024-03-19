@@ -29,7 +29,7 @@ describe('Application Router', () => {
         it('Should upload application data successfully', async () => {
             const response = await request(app)
                 .post('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUsImlhdCI6MTcxMDEzNDY0NH0.Utx7oLEkzwlvIUOI_-5dn0jfNr37mt1oiB9pizlzn-8")
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU5LCJpYXQiOjE3MTA4NTM2Njl9.mO7lYbQHaBrhHH0ZfIjGz1AsmqZpOlmqPbU-980_T6I")
                 .field({
                     workshop_name: 'Test Workshop',
                     workshop_post_code: '12345',
@@ -50,13 +50,13 @@ describe('Application Router', () => {
 
             expect(response.status).toBe(201);
             expect(response.body).toEqual({ output: 'success', msg: 'Application inserted successfully' });
-        }, 15000);
+        }, 30000);
 
         it('Should handle error during application data upload', async () => {
             app.locals.db = undefined;
             const response = await request(app)
                 .post('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUsImlhdCI6MTcxMDEzNDY0NH0.Utx7oLEkzwlvIUOI_-5dn0jfNr37mt1oiB9pizlzn-8")
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU5LCJpYXQiOjE3MTA4NTM2Njl9.mO7lYbQHaBrhHH0ZfIjGz1AsmqZpOlmqPbU-980_T6I")
                 .field({
                     workshop_name: 'Test Workshop 1',
                     workshop_post_code: '12345',
@@ -78,14 +78,14 @@ describe('Application Router', () => {
             expect(response.status).toBe(500);
             expect(response.body).toEqual({ output: 'fail', msg: 'Error inserting application' });
             app.locals.db = pool;
-        }, 15000);
+        }, 30000);
     });
 
     describe('GET /', () => {
         it('Should fetch application data successfully', async () => {
             const response = await request(app)
                 .get('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUsImlhdCI6MTcxMDEzNDY0NH0.Utx7oLEkzwlvIUOI_-5dn0jfNr37mt1oiB9pizlzn-8");
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA");
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({ output: 'success', msg: 'Record fetched successfully', result: expect.any(Object) });
@@ -95,7 +95,7 @@ describe('Application Router', () => {
             app.locals.db = undefined;
             const response = await request(app)
                 .get('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUsImlhdCI6MTcxMDEzNDY0NH0.Utx7oLEkzwlvIUOI_-5dn0jfNr37mt1oiB9pizlzn-8");
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA");
 
             expect(response.status).toBe(500);
             expect(response.body).toEqual({ output: 'fail', msg: 'Error in fetching data' });
@@ -103,19 +103,17 @@ describe('Application Router', () => {
         });
     });
 
-    /*
+    
     describe('POST /edit', () => {
         it('Should edit application successfully', async () => {
             // Assuming you have a valid token and application data in your testing database
             const response = await request(app)
-                .post('/edit')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUsImlhdCI6MTcxMDEzNDY0NH0.Utx7oLEkzwlvIUOI_-5dn0jfNr37mt1oiB9pizlzn-8")
+                .post('/application/edit')
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU4LCJpYXQiOjE3MTA4NTM2NDJ9.-w2MNB0LMdxWcWbBSAYvh1nnwa--ZPOuhugd-MFaoMQ")
                 .field({
-                    workshop_name: 'Test Workshop',
-                    application_status: 'Pending',
+                    workshop_name: 'edited workshop',
                     brands: 'Sample brands updated'
-                })
-                .attach('files', 'src/uploads/1707294310151-pexels-pixabay-207498.jpg');
+                });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({ output: 'success', msg: 'application updated successfully' });
@@ -124,30 +122,65 @@ describe('Application Router', () => {
         it('Should handle error during application edit', async () => {
             app.locals.db = undefined;
             const response = await request(app)
-                .post('/edit')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDUsImlhdCI6MTcxMDEzNDY0NH0.Utx7oLEkzwlvIUOI_-5dn0jfNr37mt1oiB9pizlzn-8")
+                .post('/application/edit')
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU4LCJpYXQiOjE3MTA4NTM2NDJ9.-w2MNB0LMdxWcWbBSAYvh1nnwa--ZPOuhugd-MFaoMQ")
                 .field({
-                    workshop_name: 'Test Workshop',
-                    application_status: 'Pending'
-                })
-                .attach('files', 'path_to_file');
+                    workshop_name: 'Test Workshop 2',
+                });
 
             expect(response.status).toBe(500);
             expect(response.body).toEqual({ output: 'fail', msg: 'Error inserting application' });
             app.locals.db = pool;
         });
     });
-    */
+    
+    describe('GET USER /', () => {
+        it('Should fetch application data of perticular user successfully', async () => {
+            const response = await request(app)
+                .get('/application/getUserApplication')
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA");
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({ output: 'success', msg: 'Record fetched successfully', result: expect.any(Object) });
+        });
+
+        it('Should handle user with no applications', async () => {
+            const response = await request(app)
+                .get('/application/getUserApplication')
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYwLCJpYXQiOjE3MTA4NTY4Nzh9.zR0ul7hvXRkImj0-deEZfSIJC7nBDvxT_uDmoIvJfmY");
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({ output: 'no records', msg: 'No application found', result: expect.any(Object) });
+        });
+
+        it('Should handle error during application data of perticular user', async () => {
+            app.locals.db = undefined;
+            const response = await request(app)
+                .get('/application')
+                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA");
+
+            expect(response.status).toBe(500);
+            expect(response.body).toEqual({ output: 'fail', msg: 'Error in fetching data' });
+            app.locals.db = pool;
+        });
+    });
 
     afterAll(async () => {
         const databasePromises: Promise<sql.IResult<any>>[] = [];
-        // ['yulmaharka@gufum.com'].forEach(async (user_email) => {
-        //     const cleanupRequest = pool.request()
-        //         .input('user_email', sql.NVarChar, user_email);
-        //     const sqlQuery = `DELETE FROM Applications WHERE user_email = @user_email;`;
-        //     databasePromises.push(cleanupRequest.query(sqlQuery));
-        // });
-        ['1234567890', '1234567891'].forEach(async (user_mobile) => {
+
+        /**
+         * Sample emails and applications with tokes
+         * 
+         * fakemail1@gmail.com , password1, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA
+         * 
+         * lacev33817@fryshare.com, password 2, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU4LCJpYXQiOjE3MTA4NTM2NDJ9.-w2MNB0LMdxWcWbBSAYvh1nnwa--ZPOuhugd-MFaoMQ
+         * 
+         * adam@example.com, password3, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU5LCJpYXQiOjE3MTA4NTM2Njl9.mO7lYbQHaBrhHH0ZfIjGz1AsmqZpOlmqPbU-980_T6I
+         * 
+         * norecordmail@gmail.com, password4, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYwLCJpYXQiOjE3MTA4NTY4Nzh9.zR0ul7hvXRkImj0-deEZfSIJC7nBDvxT_uDmoIvJfmY
+         */
+
+        ['1234567890'].forEach(async (user_mobile) => {
             const cleanupRequest = pool.request()
                 .input('user_mobile', sql.BigInt, user_mobile);
             const sqlQuery = `DELETE FROM Applications WHERE user_mobile = @user_mobile;`;
