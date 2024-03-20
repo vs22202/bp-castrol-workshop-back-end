@@ -55,9 +55,9 @@ describe('Register Router', () => {
         await setupMobileExpiredRequest.query(sqlQuery);
     });
 
-/**
- * Email tests
- */
+    /**
+     * Email tests
+     */
 
     it('Should successfully register a user with valid OTP', async () => {
         // Assuming you have a valid OTP and user details in your testing database
@@ -116,10 +116,10 @@ describe('Register Router', () => {
         app.locals.db = pool;
     });
 
-    
-/**
- * Mobile tests
- */
+
+    /**
+     * Mobile tests
+     */
 
     it('Should successfully register a user with valid OTP and mobile number', async () => {
         // Assuming you have a valid OTP and user details with mobile number in your testing database
@@ -186,13 +186,15 @@ describe('Register Router', () => {
         ['test@example.com', 'invalidtest@example.com', 'expiredtest@example.com'].forEach(async (user_email) => {
             const cleanupRequest = pool.request()
                 .input('user_email', sql.NVarChar, user_email);
-            const sqlQuery = `DELETE FROM Otp_Verification WHERE user_email = @user_email`;
+            const sqlQuery = `DELETE FROM Otp_Verification WHERE user_email = @user_email;
+                              DELETE FROM Users WHERE user_email = @user_email;`;
             databasePromises.push(cleanupRequest.query(sqlQuery));
         });
         [1234567891, 1234567892, 1234567893].forEach(async (user_mobile) => {
             const cleanupRequest = pool.request()
                 .input('user_mobile', sql.BigInt, user_mobile);
-            const sqlQuery = `DELETE FROM Otp_Verification WHERE user_mobile = @user_mobile`;
+            const sqlQuery = `DELETE FROM Otp_Verification WHERE user_mobile = @user_mobile;
+                              DELETE FROM Users WHERE user_mobile = @user_mobile;`;
             databasePromises.push(cleanupRequest.query(sqlQuery));
         });
 

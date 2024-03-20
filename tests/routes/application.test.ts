@@ -6,16 +6,16 @@ import * as mail from '../../src/utils/mail';
 import * as authenticate from '../../src/utils/authenticate';
 import { Options } from 'nodemailer/lib/mailer';
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { ApplicationStatus } from '../../src/models/application';
 
 
 let pool: sql.ConnectionPool;
+let accessTokens: string[] = [];
+
 describe('Application Router', () => {
 
     beforeAll(async () => {
-        jest.spyOn(authenticate, "authenticateJWT")
-            .mockImplementation(async (req: Request, res: Response, next: NextFunction) => {
-                next();
-            });
         jest.spyOn(mail, "default")
             .mockImplementation(async (options: Options, callback: any) => {
                 callback({ messageId: "test_messsage" });
@@ -23,16 +23,89 @@ describe('Application Router', () => {
 
         pool = await initializeDB();
         app.locals.db = pool;
+
+        for (let i = 0; i < 4; i++) {
+            accessTokens.push(jwt.sign({ userId: i }, process.env.ACCESS_TOKEN_SECRET || 'access'));
+        }
+
+        let sqlQuery: string;
+        let request: sql.Request;
+        let sampelData = [
+            {
+                workshop_name: 'Sample Workshop 1',
+                workshop_post_code: '123456',
+                address: '123 Main Street',
+                state: 'Sample State',
+                city: 'Sample City',
+                user_name: 'User 1',
+                user_mobile: '1234567891',
+                bay_count: 50,
+                services_offered: 'Sample Services',
+                expertise: 'Sample Expertise',
+                brands: 'Sample Brands',
+                consent_process_data: true,
+                consent_being_contacted: true,
+                consent_receive_info: true,
+                file_paths: '',
+                user_id: 1
+            },
+            {
+                workshop_name: 'Sample Workshop 2',
+                workshop_post_code: '123457',
+                address: '123 Main Street',
+                state: 'Sample State',
+                city: 'Sample City',
+                user_name: 'User 2',
+                user_mobile: '1234567892',
+                bay_count: 5,
+                services_offered: 'Sample Services',
+                expertise: 'Sample Expertise',
+                brands: 'Sample Brands',
+                consent_process_data: true,
+                consent_being_contacted: false,
+                consent_receive_info: false,
+                file_paths: '',
+                user_id: 2
+            }
+        ]
+        sqlQuery = `
+                INSERT INTO Applications 
+                (workshop_name, workshop_post_code, address, state, city, user_name, user_mobile, bay_count, services_offered, expertise, brands, consent_process_data, consent_being_contacted, consent_receive_info, file_paths, application_status, last_modified_date,user_id) 
+                VALUES (@workshop_name, @workshop_post_code, @address, @state, @city, @user_name, @user_mobile, @bay_count, @services_offered, @expertise, @brands, @consent_process_data, @consent_being_contacted, @consent_receive_info, @file_paths, @application_status, @last_modified_date,@user_id)
+            `;
+
+        sampelData.forEach(async (data) => {
+            request = pool.request()
+                .input('workshop_name', sql.NVarChar, data.workshop_name)
+                .input('workshop_post_code', sql.NVarChar, data.workshop_post_code)
+                .input('address', sql.NVarChar, data.address)
+                .input('state', sql.NVarChar, data.state)
+                .input('city', sql.NVarChar, data.city)
+                .input('user_name', sql.NVarChar, data.user_name)
+                .input('user_mobile', sql.NVarChar, data.user_mobile)
+                .input('bay_count', sql.Int, data.bay_count)
+                .input('services_offered', sql.NVarChar, data.services_offered)
+                .input('expertise', sql.NVarChar, data.expertise)
+                .input('brands', sql.NVarChar, data.brands)
+                .input('consent_process_data', sql.Bit, data.consent_process_data)
+                .input('consent_being_contacted', sql.Bit, data.consent_being_contacted)
+                .input('consent_receive_info', sql.Bit, data.consent_receive_info)
+                .input('file_paths', sql.NVarChar, JSON.stringify(data.file_paths))
+                .input('application_status', sql.NVarChar, ApplicationStatus.Pending)
+                .input('last_modified_date', sql.DateTime2, (new Date()).toISOString())
+                .input('user_id', sql.Int, data.user_id)
+            await request.query(sqlQuery);
+        })
     });
 
     describe('POST /', () => {
         it('Should upload application data successfully', async () => {
             const response = await request(app)
                 .post('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU5LCJpYXQiOjE3MTA4NTM2Njl9.mO7lYbQHaBrhHH0ZfIjGz1AsmqZpOlmqPbU-980_T6I")
+                .set("Authorization", accessTokens[0])
                 .field({
                     workshop_name: 'Test Workshop',
-                    workshop_post_code: '12345',
+                    workshop_post_code: '123458',
                     address: '123 Main Street',
                     state: 'Sample State',
                     city: 'Sample City',
@@ -56,10 +129,10 @@ describe('Application Router', () => {
             app.locals.db = undefined;
             const response = await request(app)
                 .post('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU5LCJpYXQiOjE3MTA4NTM2Njl9.mO7lYbQHaBrhHH0ZfIjGz1AsmqZpOlmqPbU-980_T6I")
+                .set("Authorization", accessTokens[0])
                 .field({
                     workshop_name: 'Test Workshop 1',
-                    workshop_post_code: '12345',
+                    workshop_post_code: '123456',
                     address: '123 Main Street',
                     state: 'Sample State 1',
                     city: 'Sample City 1',
@@ -85,7 +158,7 @@ describe('Application Router', () => {
         it('Should fetch application data successfully', async () => {
             const response = await request(app)
                 .get('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA");
+                .set("Authorization", accessTokens[1]);
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({ output: 'success', msg: 'Record fetched successfully', result: expect.any(Object) });
@@ -95,7 +168,7 @@ describe('Application Router', () => {
             app.locals.db = undefined;
             const response = await request(app)
                 .get('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA");
+                .set("Authorization", accessTokens[1]);
 
             expect(response.status).toBe(500);
             expect(response.body).toEqual({ output: 'fail', msg: 'Error in fetching data' });
@@ -103,13 +176,13 @@ describe('Application Router', () => {
         });
     });
 
-    
+
     describe('POST /edit', () => {
         it('Should edit application successfully', async () => {
             // Assuming you have a valid token and application data in your testing database
             const response = await request(app)
                 .post('/application/edit')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU4LCJpYXQiOjE3MTA4NTM2NDJ9.-w2MNB0LMdxWcWbBSAYvh1nnwa--ZPOuhugd-MFaoMQ")
+                .set("Authorization", accessTokens[2])
                 .field({
                     workshop_name: 'edited workshop',
                     brands: 'Sample brands updated'
@@ -123,7 +196,7 @@ describe('Application Router', () => {
             app.locals.db = undefined;
             const response = await request(app)
                 .post('/application/edit')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU4LCJpYXQiOjE3MTA4NTM2NDJ9.-w2MNB0LMdxWcWbBSAYvh1nnwa--ZPOuhugd-MFaoMQ")
+                .set("Authorization", accessTokens[2])
                 .field({
                     workshop_name: 'Test Workshop 2',
                 });
@@ -133,12 +206,12 @@ describe('Application Router', () => {
             app.locals.db = pool;
         });
     });
-    
+
     describe('GET USER /', () => {
         it('Should fetch application data of perticular user successfully', async () => {
             const response = await request(app)
                 .get('/application/getUserApplication')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA");
+                .set("Authorization", accessTokens[1]);
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({ output: 'success', msg: 'Record fetched successfully', result: expect.any(Object) });
@@ -147,7 +220,7 @@ describe('Application Router', () => {
         it('Should handle user with no applications', async () => {
             const response = await request(app)
                 .get('/application/getUserApplication')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYwLCJpYXQiOjE3MTA4NTY4Nzh9.zR0ul7hvXRkImj0-deEZfSIJC7nBDvxT_uDmoIvJfmY");
+                .set("Authorization", accessTokens[3]);
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({ output: 'no records', msg: 'No application found', result: expect.any(Object) });
@@ -157,7 +230,7 @@ describe('Application Router', () => {
             app.locals.db = undefined;
             const response = await request(app)
                 .get('/application')
-                .set("Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA");
+                .set("Authorization", accessTokens[1]);
 
             expect(response.status).toBe(500);
             expect(response.body).toEqual({ output: 'fail', msg: 'Error in fetching data' });
@@ -180,7 +253,7 @@ describe('Application Router', () => {
          * norecordmail@gmail.com, password4, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYwLCJpYXQiOjE3MTA4NTY4Nzh9.zR0ul7hvXRkImj0-deEZfSIJC7nBDvxT_uDmoIvJfmY
          */
 
-        ['1234567890'].forEach(async (user_mobile) => {
+        ['1234567890', '1234567891', '1234567892'].forEach(async (user_mobile) => {
             const cleanupRequest = pool.request()
                 .input('user_mobile', sql.BigInt, user_mobile);
             const sqlQuery = `DELETE FROM Applications WHERE user_mobile = @user_mobile;`;
