@@ -39,7 +39,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
         const generate_time = (new Date(retriveOtpResult.recordset[0].generate_time)).getTime();
         const current_time = (new Date()).getTime();
         if (current_time - generate_time > otpTimeout) {
-            res.status(400).json({ output: 'fail', msg: 'OTP expired, please regenrate' });
+            res.status(400).json({ output: 'fail', msg: 'OTP expired, please regenerate' });
             return;
         }
         else if (otp !== retriveOtpResult.recordset[0].otp) {
@@ -107,7 +107,7 @@ router.post('/mobile', upload.any(), async (req: Request, res: Response) => {
         const generate_time = (new Date(retriveOtpResult.recordset[0].generate_time)).getTime();
         const current_time = (new Date()).getTime();
         if (current_time - generate_time > otpTimeout) {
-            res.status(400).json({ output: 'fail', msg: 'OTP expired, please regenrate' });
+            res.status(400).json({ output: 'fail', msg: 'OTP expired, please regenerate' });
             return;
         }
         else if (otp !== retriveOtpResult.recordset[0].otp) {

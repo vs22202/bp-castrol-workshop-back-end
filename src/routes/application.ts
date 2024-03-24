@@ -14,11 +14,13 @@ const upload: Multer = multer({ storage: fileStorage });
 
 /**
  * Router
- *      POST  - To upload application data
- *      GET   - To show current table entries
+ *      POST /  - To upload application data
+ *      GET  /  - To show current table entries
+ *      POST /edit                - Edit application
+ *      GET  /getUserApplication  - Send applications with requested user_id
  */
 
-router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Response) => {
+router.post('/', [authenticateJWT, upload.any()], async (req: Request, res: Response) => {
     // Create Application object
     const application: Application = new Application(req.body);
     const user_id = parseInt((req as CustomRequest).token.userId)
@@ -122,7 +124,8 @@ router.get('/', authenticateJWT, async (req: Request, res: Response) => {
         res.status(500).json({ output: 'fail', msg: 'Error in fetching data' });
     }
 });
-router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: Response) => {
+
+router.post("/edit", [authenticateJWT, upload.any()], async (req: Request, res: Response) => {
     const application: UpdateApplication = new UpdateApplication(req.body);
     const user_id = parseInt((req as CustomRequest).token.userId)
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
@@ -143,15 +146,19 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
                 }
                 application.setSQLInput(request, field, application[field])
             }
-            request.input("user_id",sql.Int,user_id)
+            request.input("user_id", sql.Int, user_id)
             setUpdates = setUpdates.slice(0, -2);
-            const sqlQuery = `UPDATE Applications ${setUpdates} WHERE user_id = @user_id`
+            const sqlQuery = `UPDATE Applications ${setUpdates} 
+                              WHERE user_id = @user_id`
             const result = await request.query(sqlQuery);
             console.log('Application updated successfully:', result.rowsAffected);
+
             //Send New Application Added Alert
             const request2 = pool.request();
             request2.input('user_id', sql.Int, user_id);
-            const sqlQuery2 = "SELECT workshop_name,application_status FROM Applications WHERE user_id = @user_id"
+            const sqlQuery2 = `SELECT workshop_name,application_status 
+                               FROM Applications 
+                               WHERE user_id = @user_id`;
             const result2 = await request2.query(sqlQuery2);
             if (result2.recordset[0].application_status != "Pending") {
                 const accessToken = jwt.sign({ userId: user_id }, process.env.ACCESS_TOKEN_SECRET || 'access');
@@ -181,7 +188,7 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
                     console.log("MESSAGE ID: ", info.messageId);
                 });
             }
-            
+
             res.status(200).json({ output: 'success', msg: 'application updated successfully' });
         }
         catch (error) {
@@ -189,7 +196,8 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
             res.status(500).json({ output: 'fail', msg: 'Error inserting application' });
         }
     })
-})
+});
+
 router.get('/getUserApplication', authenticateJWT, async (req: Request, res: Response) => {
     const user_id = parseInt((req as CustomRequest).token.userId)
     try {

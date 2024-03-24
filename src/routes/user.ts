@@ -214,7 +214,8 @@ router.post('/generateResetOtp',upload.any(), async (req: Request, res: Response
         res.status(500).json({ output: "fail", msg: 'Invalid request' })
     }
 
-})
+});
+
 router.post('/resetPassword',upload.any(), async (req: Request, res: Response) => {
     if (req.body.user_email) {
         // Create user object
@@ -339,7 +340,7 @@ router.post('/resetPassword',upload.any(), async (req: Request, res: Response) =
     else {
         res.status(500).json({ output: "fail", msg: 'Invalid request' });
     }
-})
+});
 
 
 
