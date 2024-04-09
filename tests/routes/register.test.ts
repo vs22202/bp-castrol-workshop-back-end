@@ -70,7 +70,7 @@ describe('Register Router', () => {
             });
 
         expect(response.status).toBe(400);
-        expect(response.body).toEqual({ output: 'fail', msg: 'OTP expired, please regenrate'});
+        expect(response.body).toEqual({ output: 'fail', msg: 'OTP expired, please regenerate'});
     });
 
     it('should handle SQL error during registration', async () => {
