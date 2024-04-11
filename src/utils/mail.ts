@@ -27,6 +27,7 @@ const SENDMAIL = async (options: Options, callback: any) => {
 export const generateHTML = async (accessToken: string) => {
     let data = fs.readFileSync('src/utils/workshopData.html', 'utf8')
     data = data.replace(/{{token}}/, accessToken)
+    data = data.replace(/{{backend_url}}/, process.env.BACKEND_URL || 'http://localhost:3000');
     return data;
 
 }
