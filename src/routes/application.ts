@@ -71,7 +71,7 @@ router.post('/',[authenticateJWT,upload.any()], async (req: Request, res: Respon
                     A New Application For Certification Has Been Submitted By A Workshop
                   </h2>
                   <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">The Submitted Data is attached below.</h3>
-                  <a href="http://localhost:3000/castrol_admin?auth_token=${accessToken}">Click here to view the submitted Data</a>
+                  <a href="${process.env.BACKEND_URL}/castrol_admin?auth_token=${accessToken}">Click here to view the submitted Data</a>
 
                 </div>
             </html>`,
@@ -166,7 +166,7 @@ router.post("/edit", [authenticateJWT,upload.any()], async (req: Request, res: R
                         A New Update Has Been Made By A Workshop
                       </h2>
                       <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">Find the changes attached below.</h3>
-                      <a href="http://localhost:3000/castrol_admin?auth_token=${accessToken}">Click here to view the submitted Data</a>
+                      <a href="${process.env.BACKEND_URL}/castrol_admin?auth_token=${accessToken}">Click here to view the submitted Data</a>
                     </div>
                 </html>`,
                     attachments: [

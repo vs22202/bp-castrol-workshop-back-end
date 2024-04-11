@@ -123,7 +123,7 @@
     <script type="application/javascript">
       const fetchData = async () => {
         const res = await fetch(
-          "http://localhost:3000/application/getUserApplication",
+          "{{backend_url}}/application/getUserApplication",
           {
             method: "GET",
             headers: {
