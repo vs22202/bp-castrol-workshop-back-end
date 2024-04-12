@@ -67,7 +67,7 @@ async function retryConnection(): Promise<any> {
     })
 }
 
-export async function initializeDB(app:any) {
+export async function initializeDB(app ?:any) {
     let pool;
     try {
         // Connect to SQL Connection Pool
