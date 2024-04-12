@@ -83,7 +83,7 @@ router.post('/generateResetOtp',upload.any(), async (req: Request, res: Response
                         WHERE user_email=@user_email`;
             const verifiedStatus = await verifiedStatusRequest.query(sqlQuery);
             if (verifiedStatus.recordset.length == 0) {
-                res.status(400).json({ output: 'fail', msg: 'This email does not exist, please sign up instead' });
+                res.status(400).json({ output: 'fail', msg: 'This email does not exist, please sign up instead.' });
                 return;
             }
 
@@ -214,7 +214,8 @@ router.post('/generateResetOtp',upload.any(), async (req: Request, res: Response
         res.status(500).json({ output: "fail", msg: 'Invalid request' })
     }
 
-})
+});
+
 router.post('/resetPassword',upload.any(), async (req: Request, res: Response) => {
     if (req.body.user_email) {
         // Create user object
@@ -339,7 +340,7 @@ router.post('/resetPassword',upload.any(), async (req: Request, res: Response) =
     else {
         res.status(500).json({ output: "fail", msg: 'Invalid request' });
     }
-})
+});
 
 
 
