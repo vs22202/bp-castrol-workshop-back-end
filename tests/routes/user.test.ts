@@ -212,7 +212,7 @@ describe('User Router', () => {
                 });
     
             expect(response.status).toBe(400);
-            expect(response.body).toEqual({ output: 'fail', msg: 'User Email does not exist. Please SignUp' });
+            expect(response.body).toEqual({ output: 'fail', msg: 'This email does not exist, please sign up instead.' });
         });
     
         it('Should handle user mobile not found error', async () => {
@@ -223,7 +223,7 @@ describe('User Router', () => {
                 });
     
             expect(response.status).toBe(400);
-            expect(response.body).toEqual({ output: 'fail', msg: 'User Mobile does not exist. Please SignUp Instead.' });
+            expect(response.body).toEqual({ output: 'fail', msg: 'This mobile number does not exist, please sign up instead.' });
         });
     
         it('Should handle server side error', async () => {
@@ -277,7 +277,7 @@ describe('User Router', () => {
                 });
     
             expect(response.status).toBe(400);
-            expect(response.body).toEqual({ output: 'fail', msg: 'OTP expired, please regenrate' });
+            expect(response.body).toEqual({ output: 'fail', msg: 'OTP expired, please regenerate' });
         });
     
         it('Should handle invalid OTP error', async () => {

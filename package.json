@@ -9,7 +9,7 @@
     "build": "tsc",
     "serve": "node dist/index.js",
     "docs": "npx typedoc --out docs --entryPointStrategy expand src",
-    "test": "jest --watchAll  --detectOpenHandles"
+    "test": "jest --watchAll  --detectOpenHandles --silent"
   },
   "author": "",
   "license": "ISC",

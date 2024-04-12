@@ -83,7 +83,7 @@ router.post('/generateResetOtp',upload.any(), async (req: Request, res: Response
                         WHERE user_email=@user_email`;
             const verifiedStatus = await verifiedStatusRequest.query(sqlQuery);
             if (verifiedStatus.recordset.length == 0) {
-                res.status(400).json({ output: 'fail', msg: 'User Email does not exist. Please SignUp' });
+                res.status(400).json({ output: 'fail', msg: 'This email does not exist, please sign up instead.' });
                 return;
             }
 
@@ -160,7 +160,7 @@ router.post('/generateResetOtp',upload.any(), async (req: Request, res: Response
                 WHERE user_mobile=@user_mobile`;
             const verifiedStatus = await verifiedStatusRequest.query(sqlQuery);
             if (verifiedStatus.recordset.length === 0) {
-                res.status(400).json({ output: 'fail', msg: 'User Mobile does not exist. Please SignUp Instead.' });
+                res.status(400).json({ output: 'fail', msg: 'This mobile number does not exist, please sign up instead.' });
                 return;
             }
             // Generate OTP
@@ -239,7 +239,7 @@ router.post('/resetPassword',upload.any(), async (req: Request, res: Response) =
             const generate_time = (new Date(retriveOtpResult.recordset[0].generate_time)).getTime();
             const current_time = (new Date()).getTime();
             if (current_time - generate_time > otpTimeout) {
-                res.status(400).json({ output: 'fail', msg: 'OTP expired, please regenrate' });
+                res.status(400).json({ output: 'fail', msg: 'OTP expired, please regenerate' });
                 return;
             }
             else if (otp !== retriveOtpResult.recordset[0].otp) {
@@ -300,7 +300,7 @@ router.post('/resetPassword',upload.any(), async (req: Request, res: Response) =
             const generate_time = (new Date(retriveOtpResult.recordset[0].generate_time)).getTime();
             const current_time = (new Date()).getTime();
             if (current_time - generate_time > otpTimeout) {
-                res.status(400).json({ output: 'fail', msg: 'OTP expired, please regenrate' });
+                res.status(400).json({ output: 'fail', msg: 'OTP expired, please regenerate' });
                 return;
             }
             else if (otp !== retriveOtpResult.recordset[0].otp) {
