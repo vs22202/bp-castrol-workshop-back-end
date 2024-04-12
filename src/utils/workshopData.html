@@ -7,6 +7,9 @@
       type="image/x-icon"
     />
     <style>
+      p{
+        margin:0;
+      }
       .mainContainer > * {
         margin: 0;
         padding: 0;
@@ -63,10 +66,31 @@
         width: 4px;
         background-color: rgba(229, 207, 0, 1);
       }
+      .dataGrid > .hr{
+        background-color: rgba(229, 207, 0, 1);
+        width: 20%;
+        margin-inline:auto;
+        height: 4px;
+        grid-column: 1/-1;
+        border:0;
+        margin-bottom:1em;
+      }
       .data {
         width: 90%;
         display: flex;
+        gap:1em;
         justify-content: space-between;
+        align-items: center;
+        margin-bottom:3em;
+      }
+      .data.dropdown{
+        width: 100%;
+        grid-column: 1/-1;
+        margin-bottom: 2em;
+        align-items:start;
+      }
+      .data.dropdown > .dataName{
+        width:max-content;
       }
       .data.image {
         width: 100%;
@@ -84,9 +108,28 @@
         font-weight: 400;
         color: rgba(102, 102, 102, 1);
       }
+      .boxContainer{
+        display:grid;
+        grid-template-columns: repeat(3,1fr);
+        gap:1.25em;
+        width:80%;
+      }
+      .box{
+        background-color:rgba(102, 102, 102, 0.2);
+        padding:0.25em 0.45em;
+        display:flex;
+        justify-content: center;
+        align-items:center;
+        height:30px;
+        border-radius: 7px;
+        font-size: 16px;
+        font-weight: 400;
+        color: rgba(102, 102, 102, 1);
+        min-width: max(100%,200px);
+      }
       .imageGrid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
         width: 100%;
         gap: 2em;
       }
@@ -94,14 +137,21 @@
         text-decoration: none;
         color: transparent;
         max-width: 100%;
+        background-color:rgba(102, 102, 102, 0.2) ;
+        aspect-ratio: 1/1;
+        width: fit-content;
+        border-radius:20px;
+        overflow:hidden;
       }
       .imageGrid > a > img,
       .imageGrid > a > video {
         display: block;
         max-width: 100%;
         aspect-ratio: 1/1;
-        width: 200px;
+        width: 300px;
+        border-radius:20px;
         transition:filter 100ms ease-in;
+        
       }
       .imageGrid > a > img:hover,
       .imageGrid > a > video:hover {
@@ -123,17 +173,39 @@
     <script type="application/javascript">
       const fetchData = async () => {
         const res = await fetch(
-          "{{backend_url}}/application/getUserApplication",
+          "{{backend_url}}/application/getUserApplication", //{{backend_url}}
           {
             method: "GET",
             headers: {
-              Authorization:"{{token}}"
+              Authorization: "{{token}}"
             },
           }
         );
         const data = await res.json();
         const dataGrid = document.getElementById("dataGrid");
+        let imageGrid;
+        let hr = document.createElement('div');
+        hr.classList.add('hr');
         for (let field in data.result) {
+          if(field =='application_id' || field =='user_id' || field == 'consent_process_data' || field == 'consent_being_contacted' || field == 'consent_receive_info') continue;
+          if(field == 'services_offered' || field =='expertise' || field == 'brands'){
+            let values ='';
+            let plainValues = data.result[field].split(',');
+            for(value in plainValues){
+              values += `<div class="box">${plainValues[value]}</div>`
+            }
+            let div = document.createElement("div");
+            div.classList.add("data");
+            div.classList.add("dropdown");
+            div.innerHTML = `
+            <p class="dataName">${field.replace(/_/g, ' ')}</p>
+            <div class="boxContainer">${values}</div>`;
+            dataGrid.appendChild(div)
+            continue
+          }
+          if(field == 'last_modified_date'){
+            data.result[field] = data.result[field].substring(0,10);
+          }
           if (field == "file_paths") {
             let div = document.createElement("div");
             div.classList.add("data");
@@ -160,16 +232,18 @@
                 Files Uploaded
             </p>`;
             div.appendChild(divImgGrid);
-            dataGrid.appendChild(div);
+            imageGrid = div;
             continue;
           }
           let div = document.createElement("div");
           div.classList.add("data");
           div.innerHTML = `
-          <p class="dataName">${field}</p>
+          <p class="dataName">${field.replace(/_/g, ' ')}</p>
           <p class="dataValue">${data.result[field]}</p>`;
           dataGrid.appendChild(div);
         }
+        dataGrid.appendChild(hr)
+        dataGrid.append(imageGrid)
   
     const results = [data.result]
     const keys = Object.keys(results[0]);
