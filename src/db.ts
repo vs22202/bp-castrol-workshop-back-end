@@ -51,20 +51,39 @@ const config = {
         }
     }
 };
+let retryCount = 0;
+async function retryConnection(): Promise<any> {
 
+    return new Promise((resolve, reject) => {
+        const sqlPool = new sql.ConnectionPool(process.env.MODE == "test" ? config.test : process.env.MODE == "dev" ? config.development : config.production);
+        let pool = null;
+        sqlPool.connect().then((pool:any) => {
+            console.log("Database connection established")
+            resolve(pool)
+        }).catch((err:any) => {
+            console.log("Database is asleep");
+            reject(err);
+        });
+    })
+}
 
-export async function initializeDB() {
+export async function initializeDB(app ?:any) {
+    let pool;
     try {
         // Connect to SQL Connection Pool
-        const sqlPool = await new sql.ConnectionPool(process.env.MODE == "test" ? config.test : process.env.MODE == "dev" ? config.development : config.production);
-        const pool = await sqlPool.connect();
-
-        console.log('Database Connection Established');
+        pool = await retryConnection()
         return pool;
 
     } catch (err) {
-        // Handle error
-        console.log(err);
-        return null;
+        if (retryCount > 10) {
+            console.log('Database connection cannot be established');
+            return null;
+        }
+        retryCount += 1;
+        console.log('Retrying Database Connection.')
+        setTimeout(async () => {
+            pool = await initializeDB(app);
+            app.locals.db = pool;
+        }, 30000)
     }
 }

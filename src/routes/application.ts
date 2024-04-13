@@ -65,15 +65,15 @@ router.post('/', [authenticateJWT, upload.any()], async (req: Request, res: Resp
             const options: Options = {
                 from: process.env.SENDER_EMAIL,
                 to: process.env.CASTROL_ADMIN_EMAIL,
-                subject: `New Certificate Application Submitted by ${application.workshop_name}`,
+                subject: `New Certificate Application Submitted by ${application.workshop_name} ID: ${user_id}`,
                 text: `A new workshop has submitted an application. The workshop name is ${application.workshop_name}.`,
                 html: `<html>
                 <div style="padding-block: 32px;padding-inline: 72px;text-transform: capitalize;">
-                  <h2 style="margin: 0;padding: 0;font-size: 40;font-weight: bold;color: rgba(0, 153, 0, 1);">
+                  <h2 style="margin: 0;padding: 0;font-size: 40px;font-weight: bold;color: rgba(0, 153, 0, 1);">
                     A New Application For Certification Has Been Submitted By A Workshop
                   </h2>
-                  <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">The Submitted Data is attached below.</h3>
-                  <a href="${process.env.BACKEND_URL}/castrol_admin?auth_token=${accessToken}">Click here to view the submitted Data</a>
+                  <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">The Submitted Data is attached below :</h3>
+                  <a href="${process.env.BACKEND_URL}/castrol_admin?auth_token=${accessToken}" style="margin: 0;padding: 0;font-size: 20px;font-weight: 200;">Click here to view the submitted Data</a>
 
                 </div>
             </html>`,
@@ -165,15 +165,15 @@ router.post("/edit", [authenticateJWT, upload.any()], async (req: Request, res: 
                 const options: Options = {
                     from: process.env.SENDER_EMAIL,
                     to: process.env.CASTROL_ADMIN_EMAIL,
-                    subject: `New Update Has Been Submitted by ${result2.recordset[0].workshop_name}`,
+                    subject: `New Update Has Been Submitted by ${result2.recordset[0].workshop_name} ID: ${user_id}`,
                     text: `A new update has been made to an application. The workshop name is ${result2.recordset[0].workshop_name}.`,
                     html: `<html>
                     <div style="padding-block: 32px;padding-inline: 72px;text-transform: capitalize;">
-                      <h2 style="margin: 0;padding: 0;font-size: 40;font-weight: bold;color: rgba(0, 153, 0, 1);">
+                      <h2 style="margin: 0;padding: 0;font-size: 40px;font-weight: bold;color: rgba(0, 153, 0, 1);">
                         A New Update Has Been Made By A Workshop
                       </h2>
-                      <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">Find the changes attached below.</h3>
-                      <a href="${process.env.BACKEND_URL}/castrol_admin?auth_token=${accessToken}">Click here to view the submitted Data</a>
+                      <h3 style="margin: 0;padding: 0;color: rgba(102, 102, 102, 1);font-size: 28px;font-weight: 500;">Find the changes attached below :</h3>
+                      <a href="${process.env.BACKEND_URL}/castrol_admin?auth_token=${accessToken}" style="margin: 0;padding: 0;font-size: 20px;font-weight: 200;">Click here to view the submitted Data</a>
                     </div>
                 </html>`,
                     attachments: [

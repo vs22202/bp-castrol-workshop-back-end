@@ -17,12 +17,16 @@ app.use('/castrol_admin', require('./routes/castrol_admin').default);
 app.get('/', (req: Request, res: Response) => {
     res.send('Application started');
 });
+app.get('/dbConnStatus', (req: Request, res: Response) => {
+    if (app.locals.db == null) res.send({ output: 'fail', msg: 'Database connection could not be established.' });
+    else res.send({ output: 'success', msg: 'Database connection was established.' });
+})
 
 
 // Listen on PORT
 if (process.env.MODE != 'test') {
     // Initialize Database
-    initializeDB()
+    initializeDB(app)
         .then((pool) => {
             app.locals.db = pool;
             app.listen(port, () => {
