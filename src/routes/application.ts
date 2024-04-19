@@ -8,6 +8,7 @@ import { CustomRequest, authenticateJWT } from '../utils/authenticate'
 import SENDMAIL, { generateHTML} from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
 import jwt from 'jsonwebtoken';
+import { deleteFileFromStorage } from '../utils/firebase';
 // Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
@@ -94,10 +95,7 @@ router.post('/', [authenticateJWT, upload.any()], async (req: Request, res: Resp
         } catch (error) {
             // Delete uploaded files
             application.file_paths.forEach((path: string) => {
-                fse.remove(path, (err) => {
-                    if (err)
-                        console.log("Could not delete file at path : ", path);
-                });
+                deleteFileFromStorage(path);
             });
 
             // Handle error
