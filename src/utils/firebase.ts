@@ -56,9 +56,6 @@ function extractFilePath(downloadUrl: string): string {
     const filenameStartIndex = filePathWithSlash.lastIndexOf('/') + 1;
     let filename = filePathWithSlash.substring(filenameStartIndex);
 
-    // Convert filename to lowercase
-    filename = filename.toLowerCase();
-
     // Remove filename from the path to get the directory path
     const directoryPath = filePathWithSlash.substring(0, filenameStartIndex);
 
