@@ -10,15 +10,7 @@ import sendOTPWhatsapp from '../utils/mobile_message';
 // Define requeired variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
-/**
- * Router
- *      POST - generate OTP and store in table
- * 
- * Otp_Verification table
- *      user_email (@primary)   - string
- *      otp                     - string
- *      generate_time           - datetime2
- */
+
 
 router.post('/', upload.any(), async (req: Request, res: Response) => {
     const user_email = req.body.user_email;
@@ -101,16 +93,7 @@ router.post('/', upload.any(), async (req: Request, res: Response) => {
     }
 
 });
-/**
- * Router
- *      POST - generate OTP, send message(whatsapp) to user and store in table.
- * 
- * Otp_Verification table
- *      user_mobile    - string
- *      user_email     - string
- *      otp                     - string
- *      generate_time           - datetime2
- */
+
 
 router.post('/mobile', upload.any(), async (req: Request, res: Response) => {
     const user_mobile = req.body.user_mobile;
@@ -132,7 +115,7 @@ router.post('/mobile', upload.any(), async (req: Request, res: Response) => {
             res.status(400).json({ output: 'fail', msg: 'User already verified' });
             return;
         }
-        
+
         // Generate OTP
         const otp: string = generateOTP()
         // Check OTP table
@@ -170,8 +153,8 @@ router.post('/mobile', upload.any(), async (req: Request, res: Response) => {
         }
 
         console.log("Sending whatsapp message to user mobile");
-        sendOTPWhatsapp(user_mobile,otp);
-        
+        sendOTPWhatsapp(user_mobile, otp);
+
         // Send response
         res.status(200).json({ output: 'success', msg: 'OTP sent successfully' });
 
