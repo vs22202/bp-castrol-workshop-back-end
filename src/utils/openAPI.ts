@@ -15,7 +15,7 @@ const options = {
             },
         ],
     },
-    apis: ['src\\swagger\\*.ts'],
+    apis: ['src/swagger/*.ts','src\\swagger\\*.ts','../swagger/*.ts'],
 };
 
 export function getOpenApiSpecification(): object {

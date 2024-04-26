@@ -11,6 +11,9 @@
  *           type: string
  *         password:
  *           type: string
+ *         verified:
+ *           type: boolean
+ * 
  */
 
 
