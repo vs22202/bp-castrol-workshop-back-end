@@ -4,21 +4,14 @@ import sql, { ConnectionPool } from 'mssql';
 import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
 import { CustomRequest, authenticateJWT } from '../utils/authenticate'
-import SENDMAIL, { generateHTML} from '../utils/mail';
+import SENDMAIL, { generateHTML } from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
 import jwt from 'jsonwebtoken';
 import { deleteFileFromStorage } from '../utils/firebase';
+
 // Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
-
-/**
- * Router
- *      POST /  - To upload application data
- *      GET  /  - To show current table entries
- *      POST /edit                - Edit application
- *      GET  /getUserApplication  - Send applications with requested user_id
- */
 
 router.post('/', [authenticateJWT, upload.any()], async (req: Request, res: Response) => {
     // Create Application object
@@ -105,6 +98,7 @@ router.post('/', [authenticateJWT, upload.any()], async (req: Request, res: Resp
 
 });
 
+
 router.get('/', authenticateJWT, async (req: Request, res: Response) => {
     try {
         // Create request and execute query
@@ -122,25 +116,26 @@ router.get('/', authenticateJWT, async (req: Request, res: Response) => {
     }
 });
 
+
 router.post("/edit", [authenticateJWT, upload.any()], async (req: Request, res: Response) => {
     const application: UpdateApplication = new UpdateApplication(req.body);
     const user_id = parseInt((req as CustomRequest).token.userId)
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
         try {
             const pool: ConnectionPool = req.app.locals.db;
-            
+
             // Delete user files from firebase
             const getFileRequest = pool.request()
                 .input("user_id", sql.Int, user_id);
             const getFileResult = await getFileRequest.query(`SELECT * FROM Applications 
                                                               WHERE user_id=@user_id`);
-            const oldFilePaths : string[] = JSON.parse(getFileResult.recordset[0].file_paths);
-            oldFilePaths.forEach( (path : string) => {
-                if(!application.filesOld?.includes(path)) {
+            const oldFilePaths: string[] = JSON.parse(getFileResult.recordset[0].file_paths);
+            oldFilePaths.forEach((path: string) => {
+                if (!application.filesOld?.includes(path)) {
                     deleteFileFromStorage(path);
                 }
             });
-            
+
             // Update application to set new file paths
             const request: sql.Request = pool.request();
             if (application.filesOld) {
@@ -208,6 +203,7 @@ router.post("/edit", [authenticateJWT, upload.any()], async (req: Request, res: 
         }
     })
 });
+
 
 router.get('/getUserApplication', authenticateJWT, async (req: Request, res: Response) => {
     const user_id = parseInt((req as CustomRequest).token.userId)
