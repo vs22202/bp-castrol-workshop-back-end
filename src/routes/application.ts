@@ -129,12 +129,14 @@ router.post("/edit", [authenticateJWT, upload.any()], async (req: Request, res: 
                 .input("user_id", sql.Int, user_id);
             const getFileResult = await getFileRequest.query(`SELECT * FROM Applications 
                                                               WHERE user_id=@user_id`);
-            const oldFilePaths: string[] = JSON.parse(getFileResult.recordset[0].file_paths);
-            oldFilePaths.forEach((path: string) => {
-                if (!application.filesOld?.includes(path)) {
-                    deleteFileFromStorage(path);
-                }
-            });
+            const oldFilePaths: string[]|null = JSON.parse(getFileResult.recordset[0].file_paths);
+            if(oldFilePaths) {
+                oldFilePaths.forEach((path: string) => {
+                    if (application.filesOld && !application.filesOld?.includes(path)) {
+                        deleteFileFromStorage(path);
+                    }
+                });
+            }
 
             // Update application to set new file paths
             const request: sql.Request = pool.request();

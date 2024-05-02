@@ -3,9 +3,8 @@ import app from '../../src';
 import { initializeDB } from '../../src/db';
 import sql from 'mssql'
 import * as mail from '../../src/utils/mail';
-import * as authenticate from '../../src/utils/authenticate';
+import * as firebase from '../../src/utils/firebase';
 import { Options } from 'nodemailer/lib/mailer';
-import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ApplicationStatus } from '../../src/models/application';
 
@@ -20,6 +19,12 @@ describe('Application Router', () => {
             .mockImplementation(async (options: Options, callback: any) => {
                 callback({ messageId: "test_messsage" });
             });
+
+        jest.spyOn(firebase, "deleteFileFromStorage")
+            .mockImplementation(async (fileUrl: string) => {
+                console.log('entered mock function');
+            });
+        
 
         pool = await initializeDB();
         app.locals.db = pool;
@@ -46,7 +51,7 @@ describe('Application Router', () => {
                 consent_process_data: true,
                 consent_being_contacted: true,
                 consent_receive_info: true,
-                file_paths: '',
+                file_paths: [],
                 user_id: 1
             },
             {
@@ -64,7 +69,7 @@ describe('Application Router', () => {
                 consent_process_data: true,
                 consent_being_contacted: false,
                 consent_receive_info: false,
-                file_paths: '',
+                file_paths: [],
                 user_id: 2
             }
         ]
@@ -202,7 +207,7 @@ describe('Application Router', () => {
                 });
 
             expect(response.status).toBe(500);
-            expect(response.body).toEqual({ output: 'fail', msg: 'Error inserting application' });
+            expect(response.body).toEqual({ output: 'fail', msg: 'Error editing application' });
             app.locals.db = pool;
         });
     });
@@ -240,18 +245,6 @@ describe('Application Router', () => {
 
     afterAll(async () => {
         const databasePromises: Promise<sql.IResult<any>>[] = [];
-
-        /**
-         * Sample emails and applications with tokes
-         * 
-         * fakemail1@gmail.com , password1, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU3LCJpYXQiOjE3MTA4NTM1NzJ9.7TayaqdsMGd8MsDfyfiM4P28JGI-wDfU5b0QXYqs4MA
-         * 
-         * lacev33817@fryshare.com, password 2, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU4LCJpYXQiOjE3MTA4NTM2NDJ9.-w2MNB0LMdxWcWbBSAYvh1nnwa--ZPOuhugd-MFaoMQ
-         * 
-         * adam@example.com, password3, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU5LCJpYXQiOjE3MTA4NTM2Njl9.mO7lYbQHaBrhHH0ZfIjGz1AsmqZpOlmqPbU-980_T6I
-         * 
-         * norecordmail@gmail.com, password4, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYwLCJpYXQiOjE3MTA4NTY4Nzh9.zR0ul7hvXRkImj0-deEZfSIJC7nBDvxT_uDmoIvJfmY
-         */
 
         ['1234567890', '1234567891', '1234567892'].forEach(async (user_mobile) => {
             const cleanupRequest = pool.request()
