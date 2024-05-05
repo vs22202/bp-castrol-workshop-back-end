@@ -1,7 +1,9 @@
-// https://firebase.google.com/docs/web/setup#available-libraries
+// Import the functions you need from the SDKs you need
+import { readFileSync } from "node:fs";
 import { FirebaseError, initializeApp } from "firebase/app";
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll, deleteObject } from "firebase/storage";
-
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
 // Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY,
@@ -22,45 +24,4 @@ export const uploadFile = async (file: Express.Multer.File): Promise<string> => 
     const snapshot= await uploadBytes(storageRef, file.buffer, metadata);
     return await getDownloadURL(snapshot.ref)
 
-}
-
-// Function to delete a file from Firebase Storage
-export async function deleteFileFromStorage(fileUrl: string) {
-    try {
-        const filePath = extractFilePath(fileUrl);
-        const fileRef = ref(storage, filePath);
-
-        // Delete the file
-        await deleteObject(fileRef);
-        console.log(`File ${filePath} successfully deleted.`);
-    } catch (error) {
-        console.error('Error deleting file:', error);
-    }
-}
-
-function extractFilePath(downloadUrl: string): string {
-    // Remove the protocol and domain part of the URL
-    const pathStartIndex = downloadUrl.indexOf('/o/');
-    const filePathEncoded = downloadUrl.substring(pathStartIndex + 3); // Adding 3 to exclude '/o/' itself
-
-    // Decode the path component
-    const decodedPath = decodeURIComponent(filePathEncoded);
-
-    // Replace %20 with space
-    const filePathWithSpace = decodedPath.replace(/%20/g, ' ');
-
-    // Replace %2F with /
-    const filePathWithSlash = filePathWithSpace.replace(/%2F/g, '/');
-
-    // Extract the filename from the path
-    const filenameStartIndex = filePathWithSlash.lastIndexOf('/') + 1;
-    let filename = filePathWithSlash.substring(filenameStartIndex);
-
-    // Remove filename from the path to get the directory path
-    const directoryPath = filePathWithSlash.substring(0, filenameStartIndex);
-
-    // Remove query parameters from the filename
-    const filenameWithoutParams = filename.split('?')[0];
-
-    return directoryPath + filenameWithoutParams;
 }

@@ -8,8 +8,7 @@ import { getOpenApiSpecification } from './utils/openAPI';
 const app = express();
 const port = process.env.PORT || 3000;
 app.use(cors());
-app.use(errorMorgan);
-app.use(infoMorgan);
+
 //  Routes
 app.use('/application', require('./routes/application').default);
 app.use('/register', require('./routes/register').default);
