@@ -1,12 +1,11 @@
 import { initializeDB } from './db';
 import express, { Request, Response } from 'express';
 import cors from "cors";
-import {errorMorgan, infoMorgan} from "./logger/morgan-middleware";
+
 const app = express();
 const port = process.env.PORT || 3000;
 app.use(cors());
-app.use(errorMorgan);
-app.use(infoMorgan);
+
 //  Routes
 app.use('/application', require('./routes/application').default);
 app.use('/register', require('./routes/register').default);
