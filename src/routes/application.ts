@@ -3,11 +3,11 @@ import { Application, UpdateApplication } from '../models/application';
 import sql, { ConnectionPool } from 'mssql';
 import multer, { Multer } from 'multer';
 import { fileStorage } from '../utils/multer';
+import fse from 'fs-extra';
 import { CustomRequest, authenticateJWT } from '../utils/authenticate'
 import SENDMAIL, { generateHTML} from '../utils/mail';
 import { Options } from 'nodemailer/lib/mailer';
 import jwt from 'jsonwebtoken';
-import { deleteFileFromStorage } from '../utils/firebase';
 // Define required variables
 const router: Router = Router();
 const upload: Multer = multer({ storage: fileStorage });
@@ -94,7 +94,10 @@ router.post('/', [authenticateJWT, upload.any()], async (req: Request, res: Resp
         } catch (error) {
             // Delete uploaded files
             application.file_paths.forEach((path: string) => {
-                deleteFileFromStorage(path);
+                fse.remove(path, (err) => {
+                    if (err)
+                        console.log("Could not delete file at path : ", path);
+                });
             });
 
             // Handle error
@@ -128,20 +131,6 @@ router.post("/edit", [authenticateJWT, upload.any()], async (req: Request, res: 
     application.uploadFiles(req.files as Express.Multer.File[]).then(async () => {
         try {
             const pool: ConnectionPool = req.app.locals.db;
-            
-            // Delete user files from firebase
-            const getFileRequest = pool.request()
-                .input("user_id", sql.Int, user_id);
-            const getFileResult = await getFileRequest.query(`SELECT * FROM Applications 
-                                                              WHERE user_id=@user_id`);
-            const oldFilePaths : string[] = JSON.parse(getFileResult.recordset[0].file_paths);
-            oldFilePaths.forEach( (path : string) => {
-                if(!application.filesOld?.includes(path)) {
-                    deleteFileFromStorage(path);
-                }
-            });
-            
-            // Update application to set new file paths
             const request: sql.Request = pool.request();
             if (application.filesOld) {
                 application.file_paths = application.file_paths?.concat(application.filesOld)
@@ -203,8 +192,8 @@ router.post("/edit", [authenticateJWT, upload.any()], async (req: Request, res: 
             res.status(200).json({ output: 'success', msg: 'application updated successfully' });
         }
         catch (error) {
-            console.log('Error editing application:', error);
-            res.status(500).json({ output: 'fail', msg: 'Error editing application' });
+            console.log('Error inserting application:', error);
+            res.status(500).json({ output: 'fail', msg: 'Error inserting application' });
         }
     })
 });
